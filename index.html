@@ -1,928 +1,988 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Small Restaurant Setup & Financial Planner — PKR</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'></text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#eef0e9; --card:#ffffff; --card2:#f6f8f2; --ink:#182420; --muted:#5d6f64;
-  --line:#dde3d8; --line2:#c7d1c3; --chip:#e7ede3;
-  --green:#14614a; --green-deep:#0e4a38; --green-t:#e0efe7; --on-green:#ffffff;
-  --amber:#e8590c; --amber-t:#fdeee1;
-  --money:#1e7d43; --bad:#c22f2f;
-  --shadow:0 12px 32px rgba(23,46,35,.09);
-  --awn-a:#14614a; --awn-b:#f2f4ec;
-}
-[data-theme="dark"]{
-  --bg:#0d120f; --card:#151c17; --card2:#1a231d; --ink:#e7eee7; --muted:#96a89b;
-  --line:#26312a; --line2:#35443b; --chip:#1d2721;
-  --green:#2fae7c; --green-deep:#27996c; --green-t:#143126; --on-green:#06130d;
-  --amber:#ff9e3d; --amber-t:#332413;
-  --money:#5bc985; --bad:#ff8080;
-  --shadow:0 12px 32px rgba(0,0,0,.4);
-  --awn-a:#1f6f52; --awn-b:#111813;
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  margin:0; font-family:"Archivo",system-ui,sans-serif; color:var(--ink);
-  background:var(--bg);
-  background-image:radial-gradient(color-mix(in srgb,var(--line) 65%,transparent) 1px, transparent 1px);
-  background-size:26px 26px;
-  font-size:15px; line-height:1.45;
-  transition:background .25s,color .25s;
-}
-h1,h2,h3,.display{font-family:"Bricolage Grotesque","Archivo",sans-serif}
-button{font-family:inherit; cursor:pointer}
-input,select{font-family:inherit; color:inherit}
-:focus-visible{outline:2px solid var(--amber); outline-offset:2px; border-radius:6px}
-.tabnum, .grid td, .grid input{font-variant-numeric:tabular-nums}
-
-/* ---------- header ---------- */
-header{
-  background:linear-gradient(120deg,var(--green-deep),color-mix(in srgb,var(--green-deep) 80%,#0a2e22));
-  color:#f2f7f1; padding:26px clamp(16px,4vw,48px) 22px; position:relative; overflow:hidden;
-}
-header::after{content:""; position:absolute; inset:0;
-  background:radial-gradient(600px 220px at 85% -20%, rgba(255,255,255,.14), transparent 70%); pointer-events:none}
-.hwrap{max-width:1180px; margin:auto; display:flex; gap:20px; align-items:center; justify-content:space-between; flex-wrap:wrap; position:relative; z-index:1}
-.brand{display:flex; gap:16px; align-items:center}
-.mark{
-  width:58px;height:58px;flex:0 0 58px;border-radius:14px;display:grid;place-items:center;
-  background:var(--amber); color:#241203; box-shadow:0 6px 18px rgba(0,0,0,.28); transform:rotate(-4deg);
-}
-.mark svg{width:34px;height:34px}
-.brand h1{margin:0; font-size:clamp(22px,3.4vw,34px); font-weight:800; letter-spacing:-.5px; line-height:1.05}
-.brand p{margin:4px 0 0; color:#cfe3d6; font-size:13.5px}
-.brand p b{color:#ffd8a8; font-weight:600}
-.hactions{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
-.pill{background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); color:#fff;
-  padding:6px 12px; border-radius:999px; font-weight:700; font-size:13px; letter-spacing:.4px}
-.ghost{
-  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.28); color:#fff;
-  padding:7px 13px; border-radius:9px; font-weight:600; font-size:13px; transition:.18s;
-}
-.ghost:hover{background:rgba(255,255,255,.22); transform:translateY(-1px)}
-.ghost:active{transform:scale(.97)}
-.ghost svg{width:15px;height:15px;vertical-align:-2px;margin-right:5px}
-
-/* Sync Status Indicator */
-#sync-status {
-  font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 5px;
-  background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.2);
-}
-#sync-status.synced { color: #a7f3d0; }
-#sync-status.offline { color: #fca5a5; }
-#sync-status.saving { color: #fde68a; }
-.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-
-/* awning */
-.awning{position:relative; height:15px; background:repeating-linear-gradient(90deg,var(--awn-a) 0 34px,var(--awn-b) 34px 68px); transition:.25s}
-.awning::after{content:""; position:absolute; left:0; right:0; top:100%; height:16px;
-  background:
-   radial-gradient(circle 16px at 17px 0,var(--awn-a) 97%,transparent) 0 0/68px 16px repeat-x,
-   radial-gradient(circle 16px at 17px 0,var(--awn-b) 97%,transparent) 34px 0/68px 16px repeat-x;
-}
-
-/* ---------- sticky zone ---------- */
-.sticky-zone{position:sticky; top:0; z-index:60; background:color-mix(in srgb,var(--bg) 88%,transparent); backdrop-filter:blur(9px); border-bottom:1px solid var(--line); margin-top:16px}
-.ticker{max-width:1180px; margin:auto; padding:12px clamp(16px,4vw,48px) 6px; display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
-.tick{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:9px 13px; box-shadow:0 4px 14px rgba(23,46,35,.05)}
-.tick span{display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:1.1px; color:var(--muted); font-weight:700}
-.tick b{display:block; font-family:"Bricolage Grotesque",sans-serif; font-size:clamp(15px,1.8vw,21px); font-weight:800; margin-top:1px}
-.tick i{display:block; font-style:normal; font-size:11px; color:var(--muted)}
-.tick b.pos{color:var(--money)} .tick b.neg{color:var(--bad)}
-.tabs{max-width:1180px; margin:auto; padding:8px clamp(16px,4vw,48px) 10px; display:flex; gap:8px; overflow-x:auto}
-.tab{
-  border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:999px;
-  padding:8px 16px; font-weight:600; font-size:13.5px; white-space:nowrap; display:flex; gap:9px; align-items:center; transition:.18s;
-}
-.tab svg{width:15px;height:15px; stroke:currentColor}
-.tab:hover{transform:translateY(-1px); border-color:var(--line2)}
-.tab.active{background:var(--green); border-color:var(--green); color:var(--on-green); box-shadow:0 6px 16px color-mix(in srgb,var(--green) 40%,transparent)}
-.tab b{font-weight:800; background:var(--chip); color:var(--ink); border-radius:999px; padding:1px 8px; font-size:11.5px}
-.tab.active b{background:rgba(255,255,255,.22); color:inherit}
-
-/* ---------- layout : everything stacked top-to-bottom ---------- */
-main{max-width:1180px; margin:26px auto 60px; padding:0 clamp(16px,4vw,48px)}
-.panel{display:none}
-.panel.active{display:block; animation:rise .4s ease both}
-@keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
-.cards,.duo,.trio,.model-grid,.rail{display:grid; grid-template-columns:1fr; gap:18px}
-.card{background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px 18px 20px; animation:rise .45s ease both}
-.card:nth-child(2){animation-delay:.05s}.card:nth-child(3){animation-delay:.1s}
-.card-head{display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:6px}
-.eyebrow{font-size:10.5px; letter-spacing:1.6px; text-transform:uppercase; color:var(--amber); font-weight:800}
-.card h2{margin:2px 0 0; font-size:19px; font-weight:800}
-.card h3{margin:0 0 10px; font-size:16px; font-weight:800}
-.hint{font-size:12px; color:var(--muted)}
-.card-head .hint{max-width:460px; text-align:right}
-
-/* ---------- tables ---------- */
-.tbl-wrap{overflow-x:auto}
-table.grid{width:100%; border-collapse:collapse; margin-top:8px; min-width:560px}
-.grid th{font-size:10.5px; text-transform:uppercase; letter-spacing:1.1px; color:var(--muted); text-align:left; padding:7px 8px; border-bottom:2px solid var(--line)}
-.grid th.num{text-align:right}
-.grid td{padding:5px 8px; border-bottom:1px solid var(--line); vertical-align:middle}
-.grid tbody tr{transition:background .15s}
-.grid tbody tr:hover{background:color-mix(in srgb,var(--green-t) 55%,transparent)}
-.grid tbody tr.off td{opacity:.42}
-.grid td.num{text-align:right; white-space:nowrap}
-.grid td.total{font-weight:700}
-.grid tfoot td{border-bottom:0; border-top:2px solid var(--line2); padding-top:9px; font-weight:700}
-input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-input[type=number]{-moz-appearance:textfield;appearance:textfield}
-.grid input.txt{width:100%; min-width:160px; border:0; background:transparent; padding:5px 2px; font-size:14px; border-bottom:1px dashed transparent; font-weight:500}
-.grid input.txt:hover{border-bottom-color:var(--line2)}
-.grid input.txt:focus{border-bottom:1px solid var(--amber); outline:none}
-.grid select.txt{width:100%; min-width:180px; border:0; background:transparent; padding:5px 2px; font-size:14px; border-bottom:1px dashed transparent; font-weight:500; cursor:pointer}
-.grid select.txt:hover{border-bottom-color:var(--line2)}
-.grid select.txt:focus{border-bottom:1px solid var(--amber); outline:none}
-.grid input[type=number]{width:96px; text-align:right; border:1px solid transparent; background:var(--card2); border-radius:8px; padding:5px 8px; font-size:14px; transition:.15s}
-.grid input[type=number]:hover{border-color:var(--line2)}
-.grid input[type=number]:focus{border-color:var(--amber); background:var(--card); outline:none}
-.delcell{width:30px; text-align:center}
-.del{border:0; background:transparent; color:var(--muted); font-size:14px; width:26px; height:26px; border-radius:7px; opacity:.35; transition:.15s}
-tr:hover .del{opacity:1}
-.del:hover{background:color-mix(in srgb,var(--bad) 14%,transparent); color:var(--bad)}
-.btn-add{
-  width:100%; margin-top:12px; border:1.6px dashed var(--line2); background:transparent; color:var(--muted);
-  padding:9px; border-radius:11px; font-weight:700; font-size:13px; letter-spacing:.3px; transition:.18s;
-}
-.btn-add:hover{border-color:var(--green); color:var(--green); background:var(--green-t); transform:translateY(-1px)}
-.btn-add:active{transform:scale(.99)}
-.flash{animation:flash .55s ease}
-@keyframes flash{0%{background:color-mix(in srgb,var(--amber) 26%,transparent); border-radius:6px}100%{background:transparent}}
-
-/* flag (can defer / unnecessary) */
-.flagcell{width:34px; text-align:center}
-.flag{border:1px solid var(--line2); background:transparent; color:var(--muted); width:26px; height:26px; border-radius:7px; font-size:13px; opacity:.5; transition:.15s}
-.flag:hover{opacity:1; border-color:var(--amber); color:var(--amber)}
-.flag.on{background:var(--amber); border-color:var(--amber); color:#241203; opacity:1}
-tr.flagged{background:color-mix(in srgb,var(--amber) 6%,transparent)}
-tr.flagged td:first-child{box-shadow:inset 3px 0 0 var(--amber)}
-tr.flagged td.total{color:var(--muted); text-decoration:line-through}
-.flagnote{font-size:11px; color:var(--amber); margin-top:2px; font-weight:600}
-
-/* review card + segmented control */
-.review{border-color:color-mix(in srgb,var(--amber) 45%,var(--line));
-  background:linear-gradient(180deg,color-mix(in srgb,var(--amber) 7%,var(--card)),var(--card))}
-.seg{display:inline-flex; border:1px solid var(--line2); border-radius:999px; overflow:hidden}
-.seg button{border:0; background:transparent; padding:6px 14px; font-weight:700; font-size:12.5px; color:var(--muted); transition:.15s}
-.seg button.active{background:var(--amber); color:#241203}
-
-/* switch */
-.sw{appearance:none; width:42px; height:23px; border-radius:99px; background:var(--line2); position:relative; cursor:pointer; transition:.2s; flex:0 0 42px}
-.sw::after{content:""; position:absolute; top:3px; left:3px; width:17px; height:17px; border-radius:50%; background:#fff; box-shadow:0 2px 5px rgba(0,0,0,.25); transition:.2s}
-.sw:checked{background:var(--green)}
-.sw:checked::after{left:22px}
-
-/* ---------- financial model ---------- */
-.krow{display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px dashed var(--line); font-size:14px}
-.krow span{color:var(--muted)}
-.krow b{font-variant-numeric:tabular-nums}
-.krow.big{border-bottom:0; padding-top:11px}
-.krow.big b{font-family:"Bricolage Grotesque",sans-serif; font-size:26px; font-weight:800}
-.krow.big b.pos{color:var(--money)} .krow.big b.neg{color:var(--bad)}
-.chip{display:inline-block; background:var(--chip); border-radius:999px; padding:1px 9px; font-size:11.5px; font-weight:700; color:var(--muted); margin-left:6px}
-.bar{height:16px; border-radius:99px; overflow:hidden; display:flex; background:var(--card2); border:1px solid var(--line); margin:12px 0 8px}
-.bar i{display:block; height:100%; transition:width .5s cubic-bezier(.4,0,.2,1)}
-#bar-food{background:var(--amber)} #bar-opex{background:#7a8a97} #bar-net{background:var(--money)}
-.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:var(--muted)}
-.legend b{color:var(--ink)}
-.dot{display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:5px; vertical-align:-1px}
-.callout{background:var(--amber-t); border:1px solid color-mix(in srgb,var(--amber) 35%,transparent); border-radius:12px; padding:11px 13px; font-size:13px; margin-top:12px}
-.callout b{color:var(--amber)}
-.tag-new{display:inline-block; background:var(--amber); color:#241203; font-size:10px; font-weight:800; letter-spacing:.8px; border-radius:5px; padding:2px 6px; margin-left:8px; vertical-align:2px}
-.field{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:7px 0; border-bottom:1px dashed var(--line)}
-.field span{font-size:13px; color:var(--muted); font-weight:500}
-.field input{width:86px; text-align:right; border:1px solid var(--line); background:var(--card2); border-radius:8px; padding:6px 8px; font-weight:700}
-.field input:focus{border-color:var(--amber); outline:none}
-
-/* Recipe card specific styles */
-.recipe-price-input{
-  width:80px; text-align:right; border:1px solid transparent; background:var(--card2); 
-  border-radius:6px; padding:4px 8px; font-weight:700; font-size:14px;
-}
-.recipe-price-input:hover{border-color:var(--line2)}
-.recipe-price-input:focus{border-color:var(--amber); background:var(--card); outline:none}
-.sync-indicator{
-  display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--green); 
-  font-weight:600; margin-left:8px; opacity:0.7;
-}
-.sync-indicator svg{width:12px; height:12px; stroke:currentColor}
-.margin-good{color:var(--money) !important}
-.margin-low{color:var(--amber) !important}
-.margin-bad{color:var(--bad) !important}
-
-/* footer */
-footer{border-top:1px solid var(--line); background:var(--card); padding:26px clamp(16px,4vw,48px); margin-top:10px}
-footer .fwrap{max-width:1180px; margin:auto; font-size:12.5px; color:var(--muted)}
-footer a{color:var(--green); font-weight:600; text-decoration:none}
-footer a:hover{text-decoration:underline}
-footer b{color:var(--ink)}
-
-@media (max-width:900px){
-  .ticker{grid-template-columns:repeat(2,1fr)}
-  .card-head .hint{text-align:left}
-}
-@media print{
-  .sticky-zone,.awning,.hactions,.btn-add,.delcell,.flagcell,.tabs,.seg{display:none!important}
-  .panel{display:block!important}
-  body{background:#fff}
-  .card{box-shadow:none; border:1px solid #bbb; break-inside:avoid}
-  header{background:#14614a; -webkit-print-color-adjust:exact}
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍕 Restaurant Order Manager</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .animate-bounce { animation: bounce 1s infinite; }
+        
+        /* Dark mode styles */
+        .dark { background-color: #1a1a1a; color: #ffffff; }
+        .dark .bg-white { background-color: #2d2d2d; }
+        .dark .bg-gray-50 { background-color: #1a1a1a; }
+        .dark .bg-gray-100 { background-color: #3a3a3a; }
+        .dark .text-gray-800 { color: #e5e5e5; }
+        .dark .text-gray-700 { color: #d4d4d4; }
+        .dark .text-gray-600 { color: #a3a3a3; }
+        .dark .text-gray-500 { color: #737373; }
+        .dark .text-gray-400 { color: #525252; }
+        .dark .border-gray-100 { border-color: #404040; }
+        .dark .border-gray-200 { border-color: #525252; }
+        .dark .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3); }
+        
+        /* Floating emoji animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(-5deg); }
+        }
+        .floating-emoji {
+            position: absolute;
+            opacity: 0.08;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+        }
+        .float-1 { animation: float 6s ease-in-out infinite; }
+        .float-2 { animation: floatSlow 8s ease-in-out infinite; }
+        .float-3 { animation: float 7s ease-in-out infinite 1s; }
+        .float-4 { animation: floatSlow 9s ease-in-out infinite 2s; }
+    </style>
 </head>
 <body>
+    <div id="root"></div>
 
-<header>
-  <div class="hwrap">
-    <div class="brand">
-      <div class="mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
-          <path d="M12 21.5 3.4 5.4A11.2 11.2 0 0 1 12 1.8a11.2 11.2 0 0 1 8.6 3.6Z" fill="currentColor" stroke="none"/>
-          <circle cx="9.6" cy="8.4" r="1.5" fill="#7a3b06" stroke="none"/>
-          <circle cx="14" cy="12.6" r="1.5" fill="#7a3b06" stroke="none"/>
-          <circle cx="11.2" cy="16" r="1.3" fill="#7a3b06" stroke="none"/>
-        </svg>
-      </div>
-      <div>
-        <h1>Small Restaurant Setup &amp; Financial Planner</h1>
-        <p>Pizza · Burger · Shawarma · Fries · <b>Chai, Tea &amp; Coffee</b> &nbsp;—&nbsp; priced for the Pakistan market · every field editable</p>
-      </div>
-    </div>
-    <div class="hactions">
-      <span class="pill">₨ PKR</span>
-      <div id="sync-status" class="synced"><div class="sync-dot"></div> <span id="sync-text">Local Only</span></div>
-      <button class="ghost" id="btnPrint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/></svg>Print</button>
-      <button class="ghost" id="btnReset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>Reset</button>
-      <button class="ghost" id="btnTheme" aria-label="Toggle dark mode"><svg id="icoMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg><svg id="icoSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
-    </div>
-  </div>
-</header>
-<div class="awning" aria-hidden="true"></div>
+    <script type="text/babel">
+        const { useState, useEffect, createContext, useContext } = React;
 
-<div class="sticky-zone">
-  <div class="ticker">
-    <div class="tick"><span>Initial investment</span><b id="tk-invest">—</b><i id="tk-inv-sub">setup + stock + buffer</i></div>
-    <div class="tick"><span>Monthly running cost</span><b id="tk-opex">—</b><i>labour + overheads</i></div>
-    <div class="tick"><span>Monthly revenue</span><b id="tk-rev">—</b><i id="tk-days">26 open days</i></div>
-    <div class="tick"><span>Monthly net profit</span><b id="tk-net">—</b><i id="tk-payback">—</i></div>
-  </div>
-  <nav class="tabs" aria-label="Sections">
-    <button class="tab active" data-panel="panel-equipment"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 11h18M5 11V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4M5 11v8h14v-8M9 15h6"/></svg>① Equipment &amp; setup <b id="tb-setup">—</b></button>
-    <button class="tab" data-panel="panel-materials"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 8 12 3 3 8v8l9 5 9-5ZM3 8l9 5 9-5M12 13v8"/></svg>② Materials &amp; labour <b id="tb-opex">—</b></button>
-    <button class="tab" data-panel="panel-model"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 20V9m6 11V4m6 16v-8m4 8H2"/></svg>③ Financial model <b id="tb-net">—</b></button>
-    <button class="tab" data-panel="panel-recipes"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4"/></svg>④ Recipes &amp; costing</button>
-  </nav>
-</div>
+        // Theme Context
+        const ThemeContext = createContext();
+        const useTheme = () => useContext(ThemeContext);
 
-<main>
-  <!-- ① EQUIPMENT -->
-  <section id="panel-equipment" class="panel active">
-    <div class="cards">
-      <div class="card review">
-        <div class="card-head">
-          <div><span class="eyebrow">Cost control</span><h2>Setup cost review</h2></div>
-          <div class="seg" role="group" aria-label="Investment view">
-            <button id="btn-full">Full setup</button><button id="btn-lean">Lean — skip ⚑</button>
-          </div>
-        </div>
-        <div class="krow"><span>Full setup (everything listed below)</span><b id="rv-full">—</b></div>
-        <div class="krow"><span>Flagged ⚑ — unnecessary at launch / can defer</span><b id="rv-flag">—</b></div>
-        <div class="krow big"><span>Lean setup</span><b id="rv-lean" style="color:var(--amber)">—</b></div>
-        <p class="hint" style="text-align:left;max-width:none;margin-top:8px">
-          Tap the  on any row to flag or un-flag it as deferrable. The chosen view drives the investment, payback and ticker numbers.
-          Biggest levers: rent advance (negotiate months down), freezer &amp; dough mixer (defer), seating (launch delivery-first).
-        </p>
-      </div>
-      <div class="card">
-        <div class="card-head">
-          <div><span class="eyebrow">One-off capital</span><h2>Kitchen equipment</h2></div>
-          <p class="hint">Adjusted 2026 estimates for a Lahore-style fit-out. Edit quantities and unit prices — totals recalculate instantly.</p>
-        </div>
-        <div id="tbl-kitchen"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><div><span class="eyebrow">One-off capital</span><h2>Fit-out &amp; front of house</h2></div></div>
-        <div id="tbl-fitout"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><div><span class="eyebrow">Before opening day</span><h2>Pre-opening &amp; licences</h2></div></div>
-        <div id="tbl-preopen"></div>
-      </div>
-    </div>
-  </section>
+        // Floating Background Emojis Component
+        const FloatingBackground = () => {
+            const emojis = ['🍕', '🍔', '🌯', '🍟', '🥤', '🧀', '🥗', '☕', '🧆', '🍗'];
+            const positions = [
+                { top: '10%', left: '5%', size: '4rem', delay: '0s' },
+                { top: '20%', right: '8%', size: '3.5rem', delay: '1s' },
+                { top: '40%', left: '10%', size: '3rem', delay: '2s' },
+                { top: '60%', right: '12%', size: '4.5rem', delay: '0.5s' },
+                { top: '75%', left: '15%', size: '3.5rem', delay: '1.5s' },
+                { top: '85%', right: '5%', size: '3rem', delay: '2.5s' },
+                { top: '30%', left: '85%', size: '4rem', delay: '0.8s' },
+                { top: '50%', left: '3%', size: '3.5rem', delay: '1.8s' },
+                { top: '15%', left: '50%', size: '3rem', delay: '2.2s' },
+                { top: '70%', left: '60%', size: '4rem', delay: '0.3s' },
+            ];
 
-  <!-- ② MATERIALS & LABOUR -->
-  <section id="panel-materials" class="panel">
-    <div class="trio">
-      <div class="card">
-        <div class="card-head"><div><span class="eyebrow">One-off</span><h2>Opening stock — raw materials</h2></div></div>
-        <div id="tbl-materials"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><div><span class="eyebrow">Monthly</span><h2>Labour</h2></div>
-          <p class="hint" style="text-align:left;max-width:none">Pay ranges from WageIndicator (cooks &amp; minimum wage).</p></div>
-        <div id="tbl-labor"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><div><span class="eyebrow">Monthly</span><h2>Rent, utilities &amp; overheads</h2></div></div>
-        <div id="tbl-overhead"></div>
-      </div>
-    </div>
-  </section>
+            return (
+                <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+                    {positions.map((pos, i) => (
+                        <div
+                            key={i}
+                            className={`floating-emoji float-${(i % 4) + 1}`}
+                            style={{
+                                top: pos.top,
+                                left: pos.left,
+                                right: pos.right,
+                                fontSize: pos.size,
+                                animationDelay: pos.delay
+                            }}
+                        >
+                            {emojis[i % emojis.length]}
+                        </div>
+                    ))}
+                </div>
+            );
+        };
 
-  <!-- ③ FINANCIAL MODEL -->
-  <section id="panel-model" class="panel">
-    <div class="model-grid">
-      <div class="card">
-        <div class="card-head">
-          <div><span class="eyebrow">Sales menu</span><h2>Products &amp; stations <span class="tag-new">☕ CHAI ADDED</span></h2></div>
-          <p class="hint">Flip stations on/off, edit any number. <b>Unit cost is auto-calculated</b> from the ④ Recipes tab.</p>
-        </div>
-        <div id="tbl-products"></div>
-      </div>
-      <div class="rail">
-        <div class="card">
-          <h3>Assumptions</h3>
-          <label class="field"><span>Open days / month</span><input id="in-days" type="number" min="1" max="31" step="1"></label>
-          <label class="field"><span>Cash buffer (months of opex)</span><input id="in-buffer" type="number" min="0" step="0.5"></label>
-        </div>
-        <div class="card">
-          <h3>Monthly model</h3>
-          <div class="krow"><span>Revenue</span><b id="r-mrev">—</b></div>
-          <div class="krow"><span>Food cost</span><b id="r-mfood">—</b></div>
-          <div class="krow"><span>Gross profit <span class="chip" id="r-gmargin">—</span></span><b id="r-gross">—</b></div>
-          <div class="krow"><span>Operating overheads</span><b id="r-opex">—</b></div>
-          <div class="krow big"><span>Net profit<span class="chip" id="r-nem">—</span></span><b id="r-net">—</b></div>
-          <div class="bar" aria-hidden="true"><i id="bar-food"></i><i id="bar-opex"></i><i id="bar-net"></i></div>
-          <div class="legend">
-            <span><i class="dot" style="background:var(--amber)"></i>Food cost <b id="lg-food">—</b></span>
-            <span><i class="dot" style="background:#7a8a97"></i>Overheads <b id="lg-opex">—</b></span>
-            <span><i class="dot" style="background:var(--money)"></i>Profit <b id="lg-net">—</b></span>
-          </div>
-        </div>
-        <div class="card">
-          <h3>Break-even &amp; payback</h3>
-          <div class="krow"><span>Daily sales needed</span><b id="be-daily">—</b></div>
-          <div class="krow"><span>≈ orders per day</span><b id="be-orders">—</b></div>
-          <div class="krow"><span>Average ticket</span><b id="avg-ticket">—</b></div>
-          <div style="height:8px"></div>
-          <div class="krow"><span>Setup &amp; fit-out <span class="chip" id="inv-view">lean</span></span><b id="inv-setup">—</b></div>
-          <div class="krow"><span>Opening stock</span><b id="inv-mat">—</b></div>
-          <div class="krow"><span>Cash buffer</span><b id="inv-buf">—</b></div>
-          <div class="krow"><span><b>Total investment</b></span><b id="inv-total">—</b></div>
-          <div class="callout">Investment recovered in <b id="pb-val">—</b> at current net profit.</div>
-        </div>
-      </div>
-    </div>
-  </section>
+        // Database (IndexedDB)
+        const db = {
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open('RestaurantDB', 2);
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onupgradeneeded = (event) => {
+                        const database = event.target.result;
+                        if (!database.objectStoreNames.contains('orders')) {
+                            database.createObjectStore('orders', { keyPath: 'id', autoIncrement: true });
+                        }
+                        if (!database.objectStoreNames.contains('settings')) {
+                            database.createObjectStore('settings', { keyPath: 'id' });
+                        }
+                        if (!database.objectStoreNames.contains('menuItems')) {
+                            database.createObjectStore('menuItems', { keyPath: 'id' });
+                        }
+                    };
+                });
+            },
+            async addOrder(order) {
+                const database = await this.init();
+                return new Promise((resolve, reject) => {
+                    const transaction = database.transaction(['orders'], 'readwrite');
+                    const store = transaction.objectStore('orders');
+                    const request = store.add(order);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            async getOrders() {
+                const database = await this.init();
+                return new Promise((resolve, reject) => {
+                    const transaction = database.transaction(['orders'], 'readonly');
+                    const store = transaction.objectStore('orders');
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            async updateOrder(id, updates) {
+                const database = await this.init();
+                return new Promise((resolve, reject) => {
+                    const transaction = database.transaction(['orders'], 'readwrite');
+                    const store = transaction.objectStore('orders');
+                    const getRequest = store.get(id);
+                    getRequest.onsuccess = () => {
+                        const order = { ...getRequest.result, ...updates };
+                        // If status changed, mark for re-sync and track the change
+                        if (updates.status && updates.status !== getRequest.result.status) {
+                            order.synced = false;
+                            order.statusChanged = true;
+                            order.lastStatus = getRequest.result.status;
+                        }
+                        const updateRequest = store.put(order);
+                        updateRequest.onsuccess = () => resolve();
+                        updateRequest.onerror = () => reject(updateRequest.error);
+                    };
+                });
+            },
+            async getSettings() {
+                const database = await this.init();
+                return new Promise((resolve, reject) => {
+                    const transaction = database.transaction(['settings'], 'readonly');
+                    const store = transaction.objectStore('settings');
+                    const request = store.get('main');
+                    request.onsuccess = () => resolve(request.result || { id: 'main', googleSheetUrl: '', restaurantName: 'Restaurant', currency: '$' });
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            async saveSettings(settings) {
+                const database = await this.init();
+                return new Promise((resolve, reject) => {
+                    const transaction = database.transaction(['settings'], 'readwrite');
+                    const store = transaction.objectStore('settings');
+                    const request = store.put({ ...settings, id: 'main' });
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            async getMenuItems() {
+                const database = await this.init();
+                return new Promise((resolve, reject) => {
+                    const transaction = database.transaction(['menuItems'], 'readonly');
+                    const store = transaction.objectStore('menuItems');
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            async saveMenuItem(item) {
+                const database = await this.init();
+                return new Promise((resolve, reject) => {
+                    const transaction = database.transaction(['menuItems'], 'readwrite');
+                    const store = transaction.objectStore('menuItems');
+                    const request = store.put(item);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            async deleteMenuItem(id) {
+                const database = await this.init();
+                return new Promise((resolve, reject) => {
+                    const transaction = database.transaction(['menuItems'], 'readwrite');
+                    const store = transaction.objectStore('menuItems');
+                    const request = store.delete(id);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            async initializeMenuItems(defaultItems) {
+                const existing = await this.getMenuItems();
+                if (existing.length === 0) {
+                    for (const item of defaultItems) {
+                        await this.saveMenuItem(item);
+                    }
+                }
+            }
+        };
 
-  <!-- ④ RECIPES & COSTING -->
-  <section id="panel-recipes" class="panel">
-    <div class="cards">
-      <div class="card">
-        <div class="card-head">
-          <div><span class="eyebrow">Unit economics</span><h2>Recipe &amp; ingredient breakdown</h2></div>
-          <p class="hint">Each product has its own card below. Changes here <b>automatically sync</b> to the Financial Model tab and the cloud.</p>
-        </div>
-        <div id="tbl-recipes"></div>
-      </div>
-    </div>
-  </section>
-</main>
+        // Default Menu Data (used for initialization)
+        const defaultMenuItems = [
+            { id: 'pizza-margherita', name: 'Margherita', category: 'pizza', price: 8.99, emoji: '🍕', variants: [{ name: 'Small', price: 8.99 }, { name: 'Medium', price: 11.99 }, { name: 'Large', price: 14.99 }] },
+            { id: 'pizza-pepperoni', name: 'Pepperoni', category: 'pizza', price: 10.99, emoji: '🍕', variants: [{ name: 'Small', price: 10.99 }, { name: 'Medium', price: 13.99 }, { name: 'Large', price: 16.99 }] },
+            { id: 'pizza-veggie', name: 'Veggie Supreme', category: 'pizza', price: 9.99, emoji: '🥬', variants: [{ name: 'Small', price: 9.99 }, { name: 'Medium', price: 12.99 }, { name: 'Large', price: 15.99 }] },
+            { id: 'pizza-bbq-chicken', name: 'BBQ Chicken', category: 'pizza', price: 11.99, emoji: '🍗', variants: [{ name: 'Small', price: 11.99 }, { name: 'Medium', price: 14.99 }, { name: 'Large', price: 17.99 }] },
+            { id: 'burger-classic', name: 'Classic Burger', category: 'burger', price: 7.99, emoji: '🍔' },
+            { id: 'burger-cheese', name: 'Cheese Burger', category: 'burger', price: 8.99, emoji: '🧀' },
+            { id: 'burger-chicken', name: 'Chicken Burger', category: 'burger', price: 8.49, emoji: '🍔' },
+            { id: 'burger-double', name: 'Double Smash', category: 'burger', price: 11.99, emoji: '🔥' },
+            { id: 'shawarma-chicken', name: 'Chicken Shawarma', category: 'shawarma', price: 6.99, emoji: '🌯', variants: [{ name: 'Wrap', price: 6.99 }, { name: 'Plate', price: 9.99 }] },
+            { id: 'shawarma-meat', name: 'Meat Shawarma', category: 'shawarma', price: 7.99, emoji: '🌯', variants: [{ name: 'Wrap', price: 7.99 }, { name: 'Plate', price: 10.99 }] },
+            { id: 'shawarma-falafel', name: 'Falafel Shawarma', category: 'shawarma', price: 5.99, emoji: '🧆', variants: [{ name: 'Wrap', price: 5.99 }, { name: 'Plate', price: 8.99 }] },
+            { id: 'fries', name: 'French Fries', category: 'sides', price: 3.49, emoji: '🍟' },
+            { id: 'onion-rings', name: 'Onion Rings', category: 'sides', price: 4.49, emoji: '🧅' },
+            { id: 'salad', name: 'Fresh Salad', category: 'sides', price: 4.99, emoji: '🥗' },
+            { id: 'garlic-bread', name: 'Garlic Bread', category: 'sides', price: 3.99, emoji: '🧄' },
+            { id: 'cola', name: 'Cola', category: 'drinks', price: 1.99, emoji: '🥤' },
+            { id: 'juice', name: 'Fresh Juice', category: 'drinks', price: 3.49, emoji: '🧃' },
+            { id: 'water', name: 'Water', category: 'drinks', price: 0.99, emoji: '💧' },
+            { id: 'coffee', name: 'Coffee', category: 'drinks', price: 2.49, emoji: '☕' },
+        ];
 
-<footer>
-  <div class="fwrap">
-    <b>Sources used for these estimates:</b> Active Pakistani commercial kitchen suppliers 
-    (<a href="https://pakeeza.net/" target="_blank" rel="noopener">Pakeeza Commercial Kitchen</a>, 
-    <a href="https://mughalelectric.com/" target="_blank" rel="noopener">Mughal Electric</a>);
-    Pakistan Bureau of Statistics weekly Sensitive Price Indicator for food prices
-    (<a href="https://www.pbs.gov.pk/" target="_blank" rel="noopener">PBS Official Portal</a>);
-    WageIndicator Pakistan for labour pay ranges
-    (<a href="https://wageindicator.org/en-pk/work-in-pakistan/jobs-and-pay/cooks" target="_blank" rel="noopener">Cooks</a>,
-    <a href="https://wageindicator.org/en-pk/work-in-pakistan/minimum-wage" target="_blank" rel="noopener">Minimum Wage</a>).
-    Equipment prices not tracked by PBS or WageIndicator are estimated from local market research, since Pakistan's commercial kitchen equipment trade is mostly informal and quote-based.
-    <b>Treat every number here as a planning starting point, not a fixed quote — confirm with your own suppliers before committing money.</b>
-  </div>
-</footer>
+        const categories = [
+            { id: 'all', name: 'All', emoji: '📋' },
+            { id: 'pizza', name: 'Pizza', emoji: '🍕' },
+            { id: 'burger', name: 'Burgers', emoji: '🍔' },
+            { id: 'shawarma', name: 'Shawarma', emoji: '🌯' },
+            { id: 'sides', name: 'Sides', emoji: '🍟' },
+            { id: 'drinks', name: 'Drinks', emoji: '🥤' },
+        ];
 
-<script>
-/* ================= CONFIGURATION ================= */
-// ⚠️ PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
-const SYNC_URL = 'https://script.google.com/macros/s/AKfycbz3YmhHFwgiAETz-JtjLNtth8g8v9b6BRJR2JOHyozrTacYcRvIEuAHso_M3k14KhYYrA/exec'; 
+        // Sound Effects
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const playTone = (freq, duration, type = 'sine', volume = 0.3) => {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+            gain.gain.setValueAtTime(volume, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            osc.start();
+            osc.stop(audioContext.currentTime + duration);
+        };
+        const sounds = {
+            click: () => playTone(800, 0.05, 'sine', 0.1),
+            add: () => { playTone(523, 0.1); setTimeout(() => playTone(659, 0.1), 50); },
+            remove: () => { playTone(400, 0.1); setTimeout(() => playTone(300, 0.15), 50); },
+            order: () => { playTone(523, 0.15); setTimeout(() => playTone(659, 0.15), 100); setTimeout(() => playTone(784, 0.2), 200); },
+            sync: () => { playTone(880, 0.1); setTimeout(() => playTone(1100, 0.15), 80); }
+        };
 
-/* ================= state ================= */
-const clone = o => JSON.parse(JSON.stringify(o));
-const DEFAULTS = {
-  openDays: 26, bufferMonths: 2, lean: true,
-  kitchen: [
-    {name:"Gas pizza deck oven — 12″ trays", qty:1, price:85000},
-    {name:"Spiral dough mixer, 10-20 kg", qty:1, price:115000, opt:true, note:"Defer — hand-knead or buy ready dough until daily pizza volume justifies it."},
-    {name:"Pizza pans, peels & proofing trays (set)", qty:1, price:28000},
-    {name:"Gas flat-top griddle (burgers)", qty:1, price:68000},
-    {name:"Double-basket deep fryer (fries)", qty:1, price:42000},
-    {name:"Shawarma machine — gas, motor included", qty:1, price:42000},
-    {name:"Chai station — kettle, burner & flasks", qty:1, price:18000},
-    {name:"Exhaust hood, ducting & extraction fan", qty:1, price:105000},
-    {name:"Upright commercial refrigerator", qty:1, price:145000},
-    {name:"Chest freezer, 300-500 L", qty:1, price:128000, opt:true, note:"Defer — upright fridge + daily fresh buying covers the first weeks."},
-    {name:"Stainless-steel prep tables", qty:2, price:32000},
-    {name:"Two-compartment sink & wash area", qty:1, price:34000},
-    {name:"Gas piping, installation & cylinders", qty:1, price:45000},
-    {name:"Electrical work, wiring & breakers", qty:1, price:85000}
-  ],
-  fitout: [
-    {name:"Front counter & display", qty:1, price:140000},
-    {name:"Seating — tables & chairs (basic)", qty:1, price:75000, opt:true, note:"Defer if you launch delivery / takeaway first."},
-    {name:"Signage & branding", qty:1, price:45000, opt:true, note:"Trim — a painted board + social page works at launch."},
-    {name:"POS terminal, cash drawer & software", qty:1, price:35000, opt:true, note:"Defer — phone, notebook and a cash box work for week one."}
-  ],
-  preopen: [
-    {name:"Shop rent security advance (3 months)", qty:1, price:240000},
-    {name:"Trade licence & food authority registration", qty:1, price:35000},
-    {name:"Opening marketing push (flyers, social ads)", qty:1, price:25000}
-  ],
-  materials: [
-    {name:"Flour (maida), 25 kg bag", qty:6, price:3200}, {name:"Mozzarella cheese, per kg", qty:10, price:2300},
-    {name:"Pizza / tomato sauce, per kg", qty:10, price:550}, {name:"Chicken (shawarma & burgers), per kg", qty:40, price:620},
-    {name:"Burger buns, per piece", qty:300, price:45}, {name:"Potatoes (fries), per kg", qty:50, price:140},
-    {name:"Cooking oil, per litre", qty:40, price:480}, {name:"Tea leaves (patti), per kg", qty:5, price:1400},
-    {name:"Fresh milk, per litre", qty:60, price:240}, {name:"Sugar, per kg", qty:20, price:165},
-    {name:"Coffee / cappuccino mix, per kg", qty:5, price:2400}, {name:"Mayo, ketchup & shawarma sauces, per kg", qty:10, price:600},
-    {name:"Packaging — boxes, wraps, cups (stock)", qty:1, price:45000}, {name:"Cleaning & sundries", qty:1, price:8000}
-  ],
-  labor: [
-    {name:"Head cook (pizza & grill)", qty:1, price:60000}, {name:"Cook — burgers & fries", qty:1, price:45000},
-    {name:"Shawarma chef", qty:1, price:42000}, {name:"Chaiwala / tea barista", qty:1, price:28000},
-    {name:"Kitchen helper", qty:2, price:26000}, {name:"Cashier / order taker", qty:1, price:34000}, {name:"Cleaner / washer", qty:1, price:25000}
-  ],
-  overhead: [
-    {name:"Shop rent", qty:1, price:80000}, {name:"Electricity", qty:1, price:55000}, {name:"Gas", qty:1, price:28000},
-    {name:"Water & sewerage", qty:1, price:4000}, {name:"Internet & phone", qty:1, price:4000},
-    {name:"Marketing & delivery-app commission", qty:1, price:25000}, {name:"Generator / UPS fuel & upkeep", qty:1, price:10000}, {name:"Miscellaneous & contingency", qty:1, price:18000}
-  ],
-  products: [
-    {name:"Pizza — 12″", on:true, price:1350, units:24}, {name:"Burger (zinger style)", on:true, price:450, units:40},
-    {name:"Shawarma (chicken)", on:true, price:280, units:60}, {name:"Fries (regular / loaded)", on:true, price:260, units:35},
-    {name:"Doodh patti chai", on:true, price:120, units:80}, {name:"Green tea / kahwa", on:true, price:100, units:20}, {name:"Coffee / cappuccino", on:false, price:300, units:15}
-  ],
-  recipes: [
-    {product:"Pizza — 12″", ingredient:"Flour (250g)", qty:1, cost:45}, {product:"Pizza — 12″", ingredient:"Mozzarella (150g)", qty:1, cost:345},
-    {product:"Pizza — 12″", ingredient:"Tomato sauce (50g)", qty:1, cost:28}, {product:"Pizza — 12″", ingredient:"Packaging box", qty:1, cost:122},
-    {product:"Burger (zinger style)", ingredient:"Burger bun", qty:1, cost:45}, {product:"Burger (zinger style)", ingredient:"Chicken patty & marinade", qty:1, cost:90},
-    {product:"Burger (zinger style)", ingredient:"Veggies, cheese & sauce", qty:1, cost:30}, {product:"Burger (zinger style)", ingredient:"Wrapper/Box", qty:1, cost:20},
-    {product:"Shawarma (chicken)", ingredient:"Shawarma bread", qty:1, cost:25}, {product:"Shawarma (chicken)", ingredient:"Chicken meat (80g)", qty:1, cost:50},
-    {product:"Shawarma (chicken)", ingredient:"Garlic sauce & veggies", qty:1, cost:25}, {product:"Shawarma (chicken)", ingredient:"Foil wrap", qty:1, cost:15},
-    {product:"Fries (regular / loaded)", ingredient:"Potatoes (200g)", qty:1, cost:28}, {product:"Fries (regular / loaded)", ingredient:"Cooking oil", qty:1, cost:25},
-    {product:"Fries (regular / loaded)", ingredient:"Salt & seasoning", qty:1, cost:7}, {product:"Fries (regular / loaded)", ingredient:"Paper cone/box", qty:1, cost:25},
-    {product:"Doodh patti chai", ingredient:"Tea leaves", qty:1, cost:5}, {product:"Doodh patti chai", ingredient:"Fresh milk", qty:1, cost:18},
-    {product:"Doodh patti chai", ingredient:"Sugar", qty:1, cost:2}, {product:"Doodh patti chai", ingredient:"Paper cup", qty:1, cost:10},
-    {product:"Green tea / kahwa", ingredient:"Green tea / kahwa mix", qty:1, cost:12}, {product:"Green tea / kahwa", ingredient:"Sugar / honey", qty:1, cost:5},
-    {product:"Green tea / kahwa", ingredient:"Paper cup", qty:1, cost:5}, {product:"Coffee / cappuccino", ingredient:"Coffee mix", qty:1, cost:60},
-    {product:"Coffee / cappuccino", ingredient:"Milk / creamer", qty:1, cost:30}, {product:"Coffee / cappuccino", ingredient:"Paper cup & lid", qty:1, cost:20}
-  ]
-};
+        // Sync to Google Sheets
+        const syncOrders = async () => {
+            const settings = await db.getSettings();
+            if (!settings.googleSheetUrl) return { synced: 0, failed: 0 };
+            
+            const orders = await db.getOrders();
+            const unsynced = orders.filter(o => !o.synced);
+            let synced = 0, failed = 0;
 
-let state = clone(DEFAULTS);
-let isSyncing = false;
-let saveTimeout;
+            for (const order of unsynced) {
+                try {
+                    // Only send if status has changed or it's a new order
+                    const shouldSend = !order.lastSyncedStatus || order.lastSyncedStatus !== order.status;
+                    
+                    if (shouldSend) {
+                        await fetch(settings.googleSheetUrl, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                orderId: order.orderId,
+                                timestamp: order.createdAt,
+                                customerName: order.customerName,
+                                customerPhone: order.customerPhone,
+                                orderType: order.orderType,
+                                tableNumber: order.tableNumber || '',
+                                items: order.items.map(i => `${i.menuItem.emoji} ${i.menuItem.name}${i.variant ? ` (${i.variant})` : ''} x${i.quantity}`).join(', '),
+                                total: order.total,
+                                notes: order.notes,
+                                status: order.status,
+                                createdBy: order.createdBy
+                            })
+                        });
+                    }
+                    
+                    // Mark as synced and update last synced status
+                    await db.updateOrder(order.id, { 
+                        synced: true, 
+                        lastSyncedStatus: order.status,
+                        statusChanged: false
+                    });
+                    synced++;
+                } catch (e) {
+                    failed++;
+                }
+            }
+            if (synced > 0) sounds.sync();
+            return { synced, failed };
+        };
 
-/* ================= helpers ================= */
-const $ = s => document.querySelector(s);
-const fmt = n => (n < 0 ? "−" : "") + "Rs " + Math.round(Math.abs(n)).toLocaleString("en-PK");
-function compact(n){
-  const s = n < 0 ? "−" : "", a = Math.abs(n);
-  if(a >= 1e7) return s + "₨ " + (a/1e7).toFixed(2) + " Cr";
-  if(a >= 1e5) return s + "₨ " + (a/1e5).toFixed(2) + " Lakh";
-  if(a >= 1e3) return s + "₨ " + (a/1e3).toFixed(1) + "k";
-  return s + "₨ " + Math.round(a);
-}
-const val = e => Math.max(0, parseFloat(e.target.value) || 0);
-const esc = s => String(s ?? "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+        // Components
+        const NameEntry = ({ onSubmit }) => {
+            const [name, setName] = useState('');
+            const { darkMode, toggleDarkMode } = useTheme();
+            return (
+                <div className={`min-h-screen flex items-center justify-center p-4 relative ${darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50'}`}>
+                    <FloatingBackground />
+                    <button
+                        onClick={toggleDarkMode}
+                        className="absolute top-4 right-4 p-3 rounded-full bg-white/80 dark:bg-gray-800/80 shadow-lg hover:scale-110 transition-transform z-10"
+                        title="Toggle dark mode"
+                    >
+                        {darkMode ? '☀️' : '🌙'}
+                    </button>
+                    <div className={`rounded-3xl shadow-2xl p-8 md:p-12 max-w-md w-full text-center relative z-10 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                        <div className="text-6xl mb-4 animate-bounce">🍽️</div>
+                        <h1 className={`text-3xl font-bold mb-2 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Welcome!</h1>
+                        <p className={`mb-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Enter your name to start taking orders</p>
+                        <form onSubmit={(e) => { e.preventDefault(); if (name.trim()) { sounds.click(); onSubmit(name.trim()); } }}>
+                            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name..." className={`w-full px-4 py-4 text-lg border-2 rounded-2xl focus:border-orange-400 outline-none ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-200 text-gray-800'}`} autoFocus />
+                            <button type="submit" disabled={!name.trim()} className="w-full mt-6 py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-lg font-bold rounded-2xl disabled:opacity-50 hover:from-orange-600 hover:to-amber-600 transition-all">🚀 Start Taking Orders</button>
+                        </form>
+                        <p className={`mt-8 text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>💡 Admin? Add <code className={`px-2 py-1 rounded ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>?ref=Admin</code> to the URL</p>
+                    </div>
+                </div>
+            );
+        };
 
-function updateSyncStatus(status, text) {
-  const el = $('#sync-status');
-  const txt = $('#sync-text');
-  el.className = status; // synced, offline, saving
-  txt.textContent = text;
-}
+        const OrderTaking = ({ userName, isAdmin, menuItems, onViewHistory, onViewDashboard, onViewSettings, onViewMenu }) => {
+            const { darkMode, toggleDarkMode } = useTheme();
+            const [cart, setCart] = useState([]);
+            const [activeCategory, setActiveCategory] = useState('all');
+            const [showCart, setShowCart] = useState(false);
+            const [showCheckout, setShowCheckout] = useState(false);
+            const [selectedItem, setSelectedItem] = useState(null);
+            const [selectedVariant, setSelectedVariant] = useState('');
+            const [customerName, setCustomerName] = useState('');
+            const [customerPhone, setCustomerPhone] = useState('');
+            const [orderType, setOrderType] = useState('dine-in');
+            const [tableNumber, setTableNumber] = useState('');
+            const [orderNotes, setOrderNotes] = useState('');
+            const [successMessage, setSuccessMessage] = useState('');
+            const [online, setOnline] = useState(navigator.onLine);
+            const [activeOrders, setActiveOrders] = useState([]);
+            const [showActiveOrders, setShowActiveOrders] = useState(false);
 
-/* ================= SYNC LOGIC ================= */
-function saveToLocalStorage() {
-  try { localStorage.setItem("rp_state_v8", JSON.stringify(state)); } catch(e){}
-}
+            useEffect(() => {
+                const handleOnline = () => setOnline(true);
+                const handleOffline = () => setOnline(false);
+                window.addEventListener('online', handleOnline);
+                window.addEventListener('offline', handleOffline);
+                loadActiveOrders();
+                const interval = setInterval(loadActiveOrders, 5000);
+                return () => { 
+                    window.removeEventListener('online', handleOnline); 
+                    window.removeEventListener('offline', handleOffline);
+                    clearInterval(interval);
+                };
+            }, []);
 
-async function syncFromCloud() {
-  if (!SYNC_URL || SYNC_URL.includes('PASTE_YOUR')) {
-    updateSyncStatus('offline', 'Local Only (No URL)');
-    return;
-  }
-  if (isSyncing || !navigator.onLine) {
-    updateSyncStatus(navigator.onLine ? 'synced' : 'offline', navigator.onLine ? 'Synced' : 'Offline');
-    return;
+            const loadActiveOrders = async () => {
+                const orders = await db.getOrders();
+                const today = new Date().toISOString().split('T')[0];
+                const active = orders
+                    .filter(o => o.createdAt.startsWith(today) && o.status !== 'delivered')
+                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                setActiveOrders(active);
+            };
+
+            const updateOrderStatus = async (orderId, newStatus) => {
+                sounds.click();
+                const order = activeOrders.find(o => o.id === orderId);
+                if (!order) return;
+
+                // Status progression rules
+                const statusOrder = ['pending', 'preparing', 'ready', 'delivered'];
+                const currentIndex = statusOrder.indexOf(order.status);
+                const newIndex = statusOrder.indexOf(newStatus);
+
+                // Non-admins can only advance status (not revert)
+                if (!isAdmin && newIndex <= currentIndex) {
+                    alert('⚠️ You can only advance order status, not revert it.');
+                    return;
+                }
+
+                await db.updateOrder(orderId, { status: newStatus });
+                sounds.sync();
+                await loadActiveOrders();
+            };
+
+            const filteredItems = activeCategory === 'all' ? menuItems : menuItems.filter(item => item.category === activeCategory);
+            const handleItemClick = (item) => {
+                sounds.click();
+                if (item.variants && item.variants.length > 0) {
+                    setSelectedItem(item);
+                    setSelectedVariant(item.variants[0].name);
+                } else {
+                    addToCart(item);
+                }
+            };
+            const addToCart = (item, variant) => {
+                sounds.add();
+                setCart(prev => {
+                    const existing = prev.find(c => c.menuItem.id === item.id && c.variant === variant);
+                    if (existing) return prev.map(c => c.menuItem.id === item.id && c.variant === variant ? { ...c, quantity: c.quantity + 1 } : c);
+                    return [...prev, { menuItem: item, quantity: 1, variant }];
+                });
+                setSelectedItem(null);
+            };
+            const removeFromCart = (index) => { sounds.remove(); setCart(prev => prev.filter((_, i) => i !== index)); };
+            const updateQuantity = (index, delta) => {
+                sounds.click();
+                setCart(prev => prev.map((item, i) => i === index ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item));
+            };
+            const getItemPrice = (item) => item.variant && item.menuItem.variants ? item.menuItem.variants.find(v => v.name === item.variant)?.price || item.menuItem.price : item.menuItem.price;
+            const cartTotal = cart.reduce((sum, item) => sum + getItemPrice(item) * item.quantity, 0);
+            const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+            const handleSubmitOrder = async () => {
+                if (cart.length === 0) return;
+                const today = new Date().toISOString().split('T')[0];
+                const orders = await db.getOrders();
+                const todayOrders = orders.filter(o => o.createdAt.startsWith(today));
+                const orderId = `ORD-${today.replace(/-/g, '')}-${String(todayOrders.length + 1).padStart(3, '0')}`;
+                
+                await db.addOrder({
+                    orderId, customerName: customerName || 'Walk-in', customerPhone, orderType,
+                    tableNumber: orderType === 'dine-in' ? tableNumber : undefined,
+                    items: cart, total: cartTotal, notes: orderNotes, status: 'pending',
+                    createdBy: userName, createdAt: new Date().toISOString(), synced: false
+                });
+                sounds.order();
+                setSuccessMessage(`✅ Order ${orderId} placed successfully!`);
+                setTimeout(() => setSuccessMessage(''), 3000);
+                setCart([]); setCustomerName(''); setCustomerPhone(''); setTableNumber(''); setOrderNotes('');
+                setShowCheckout(false);
+            };
+
+            return (
+                <div className={`min-h-screen flex flex-col relative ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+                    <FloatingBackground />
+                    <header className={`shadow-sm border-b sticky top-0 z-30 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+                        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between relative z-10">
+                            <div className="flex items-center gap-3">
+                                <span className="text-2xl">🍽️</span>
+                                <div><h1 className={`font-bold text-lg ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Order Manager</h1><p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>👤 {userName}</p></div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={toggleDarkMode}
+                                    className={`p-2 rounded-lg transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+                                    title="Toggle dark mode"
+                                >
+                                    {darkMode ? '☀️' : '🌙'}
+                                </button>
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${online ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{online ? '🟢 Online' : '🔴 Offline'}</span>
+                                {cartCount > 0 && <button onClick={() => { sounds.click(); setShowCart(true); }} className="relative bg-orange-500 text-white px-4 py-2 rounded-xl font-medium">🛒 Cart<span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold">{cartCount}</span></button>}
+                                {isAdmin && <div className="flex gap-1 ml-2"><button onClick={onViewDashboard} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`} title="Dashboard">📊</button><button onClick={onViewHistory} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`} title="Order History">📋</button><button onClick={onViewMenu} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`} title="Menu Management">🍽️</button><button onClick={onViewSettings} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`} title="Settings">⚙️</button></div>}
+                            </div>
+                        </div>
+                    </header>
+                    {successMessage && <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg animate-bounce">{successMessage}</div>}
+                    <div className={`border-b sticky top-[68px] z-20 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+                        <div className="max-w-7xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto scrollbar-hide relative z-10">
+                            {categories.map(cat => <button key={cat.id} onClick={() => { sounds.click(); setActiveCategory(cat.id); }} className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap ${activeCategory === cat.id ? 'bg-orange-500 text-white' : darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}><span>{cat.emoji}</span><span>{cat.name}</span></button>)}
+                        </div>
+                    </div>
+                    <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-6 relative z-10">
+                        {/* Active Orders Toggle */}
+                        {activeOrders.length > 0 && (
+                            <div className="mb-4">
+                                <button 
+                                    onClick={() => { sounds.click(); setShowActiveOrders(!showActiveOrders); }}
+                                    className={`w-full rounded-2xl p-4 shadow-sm border flex items-center justify-between hover:shadow-md transition-all ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl">🔥</span>
+                                        <div className="text-left">
+                                            <h3 className={`font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Active Orders</h3>
+                                            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{activeOrders.length} order{activeOrders.length !== 1 ? 's' : ''} in progress</p>
+                                        </div>
+                                    </div>
+                                    <span className={`text-2xl ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{showActiveOrders ? '▲' : '▼'}</span>
+                                </button>
+                                
+                                {showActiveOrders && (
+                                    <div className="mt-3 space-y-3">
+                                        {activeOrders.map(order => {
+                                            const statusColors = { pending: 'bg-yellow-100 text-yellow-700 border-yellow-300', preparing: 'bg-blue-100 text-blue-700 border-blue-300', ready: 'bg-green-100 text-green-700 border-green-300', cancelled: 'bg-red-100 text-red-700 border-red-300' };
+                                            const statusEmojis = { pending: '⏳', preparing: '👨‍🍳', ready: '✅', cancelled: '❌' };
+                                            const nextStatus = { pending: 'preparing', preparing: 'ready', ready: 'delivered' };
+                                            
+                                            return (
+                                                <div key={order.id} className={`rounded-xl p-4 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+                                                    <div className="flex items-start justify-between mb-2">
+                                                        <div>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className={`font-bold text-sm ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{order.orderId}</span>
+                                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${statusColors[order.status]}`}>
+                                                                    {statusEmojis[order.status]} {order.status}
+                                                                </span>
+                                                            </div>
+                                                            <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                                👤 {order.customerName} • {order.orderType}
+                                                                {order.tableNumber && ` • Table ${order.tableNumber}`}
+                                                            </p>
+                                                        </div>
+                                                        <span className="font-bold text-orange-600">${order.total.toFixed(2)}</span>
+                                                    </div>
+                                                    
+                                                    <div className={`rounded-lg p-2 mb-3 ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                                                        <p className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                                                            {order.items.map((item, i) => (
+                                                                <span key={i}>{item.menuItem.emoji} {item.menuItem.name}{item.variant ? ` (${item.variant})` : ''} ×{item.quantity}{i < order.items.length - 1 ? ' • ' : ''}</span>
+                                                            ))}
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div className="flex gap-2">
+                                                        <button 
+                                                            onClick={() => updateOrderStatus(order.id, nextStatus[order.status])}
+                                                            className="flex-1 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-bold rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all"
+                                                        >
+                                                            {order.status === 'pending' && '👨‍🍳 Start Preparing'}
+                                                            {order.status === 'preparing' && '✅ Mark Ready'}
+                                                            {order.status === 'ready' && '📦 Mark Delivered'}
+                                                        </button>
+                                                        {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                                                            <button 
+                                                                onClick={() => {
+                                                                    if (confirm('Are you sure you want to cancel this order?')) {
+                                                                        updateOrderStatus(order.id, 'cancelled');
+                                                                    }
+                                                                }}
+                                                                className="px-3 py-2 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-all"
+                                                                title="Cancel Order"
+                                                            >
+                                                                ❌
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                            {filteredItems.map(item => <button key={item.id} onClick={() => handleItemClick(item)} className={`rounded-2xl p-4 text-left hover:shadow-lg transition-all border ${darkMode ? 'bg-gray-800 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-100 hover:border-orange-200'}`}><div className="text-4xl mb-2">{item.emoji}</div><h3 className={`font-semibold text-sm ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{item.name}</h3><p className="text-orange-600 font-bold mt-1">${item.variants ? item.variants[0].price.toFixed(2) : item.price.toFixed(2)}</p></button>)}
+                        </div>
+                    </main>
+                    {selectedItem && <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-4" onClick={() => setSelectedItem(null)}><div className="bg-white rounded-3xl p-6 max-w-sm w-full" onClick={e => e.stopPropagation()}><div className="text-center mb-4"><span className="text-5xl">{selectedItem.emoji}</span><h3 className="text-xl font-bold mt-2">{selectedItem.name}</h3></div><div className="space-y-2 mb-4">{selectedItem.variants.map(v => <button key={v.name} onClick={() => { sounds.click(); setSelectedVariant(v.name); }} className={`w-full p-3 rounded-xl text-left flex justify-between ${selectedVariant === v.name ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50 border-2 border-transparent'}`}><span>{v.name}</span><span className="font-bold text-orange-600">${v.price.toFixed(2)}</span></button>)}</div><button onClick={() => addToCart(selectedItem, selectedVariant)} className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl">Add to Cart 🛒</button></div></div>}
+                    {showCart && <div className="fixed inset-0 bg-black/50 z-50 flex justify-end" onClick={() => setShowCart(false)}><div className="bg-white w-full max-w-md h-full overflow-y-auto" onClick={e => e.stopPropagation()}><div className="sticky top-0 bg-white border-b p-4 flex justify-between"><h2 className="text-xl font-bold">🛒 Your Cart</h2><button onClick={() => setShowCart(false)} className="p-2 hover:bg-gray-100 rounded-lg">✕</button></div>{cart.length === 0 ? <div className="flex flex-col items-center justify-center h-64 text-gray-400"><span className="text-5xl mb-3">🛒</span><p>Cart is empty</p></div> : <><div className="p-4 space-y-3">{cart.map((item, i) => <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-center gap-3"><span className="text-2xl">{item.menuItem.emoji}</span><div className="flex-1"><p className="font-medium text-sm">{item.menuItem.name}</p>{item.variant && <p className="text-xs text-gray-500">{item.variant}</p>}<p className="text-orange-600 font-bold text-sm">${(getItemPrice(item) * item.quantity).toFixed(2)}</p></div><div className="flex items-center gap-1"><button onClick={() => updateQuantity(i, -1)} className="w-7 h-7 rounded-full bg-gray-200">−</button><span className="w-6 text-center text-sm">{item.quantity}</span><button onClick={() => updateQuantity(i, 1)} className="w-7 h-7 rounded-full bg-orange-100 text-orange-600">+</button></div><button onClick={() => removeFromCart(i)} className="p-1 text-red-400">🗑️</button></div>)}</div><div className="sticky bottom-0 bg-white border-t p-4"><div className="flex justify-between mb-4"><span className="text-lg font-bold">Total:</span><span className="text-2xl font-bold text-orange-600">${cartTotal.toFixed(2)}</span></div><button onClick={() => { sounds.click(); setShowCart(false); setShowCheckout(true); }} className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl">Proceed to Checkout 💳</button></div></>}</div></div>}
+                    {showCheckout && <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowCheckout(false)}><div className="bg-white rounded-3xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}><h2 className="text-xl font-bold mb-4">📝 Order Details</h2><div className="space-y-4"><div><label className="text-sm font-medium text-gray-600 mb-2 block">Order Type</label><div className="grid grid-cols-3 gap-2">{['dine-in', 'takeaway', 'delivery'].map(type => <button key={type} onClick={() => { sounds.click(); setOrderType(type); }} className={`p-2 rounded-xl text-sm font-medium ${orderType === type ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50 border-2 border-transparent'}`}>{type === 'dine-in' ? '🪑' : type === 'takeaway' ? '🥡' : '🚗'} {type}</button>)}</div></div><div><label className="text-sm font-medium text-gray-600 mb-1 block">Customer Name</label><input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Walk-in customer" className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" /></div><div><label className="text-sm font-medium text-gray-600 mb-1 block">Phone Number</label><input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Optional" className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" /></div>{orderType === 'dine-in' && <div><label className="text-sm font-medium text-gray-600 mb-1 block">Table Number</label><input type="text" value={tableNumber} onChange={(e) => setTableNumber(e.target.value)} placeholder="e.g., T5" className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" /></div>}<div><label className="text-sm font-medium text-gray-600 mb-1 block">Special Notes</label><textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Any special requests..." className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none resize-none h-20" /></div><div className="bg-gray-50 rounded-xl p-3"><h3 className="font-medium text-sm mb-2">📋 Order Summary</h3>{cart.map((item, i) => <div key={i} className="flex justify-between text-sm py-1"><span>{item.menuItem.emoji} {item.menuItem.name}{item.variant ? ` (${item.variant})` : ''} ×{item.quantity}</span><span className="font-medium">${(getItemPrice(item) * item.quantity).toFixed(2)}</span></div>)}<div className="border-t mt-2 pt-2 flex justify-between font-bold"><span>Total</span><span className="text-orange-600">${cartTotal.toFixed(2)}</span></div></div><button onClick={handleSubmitOrder} className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl">✅ Place Order</button></div></div></div>}
+                </div>
+            );
+        };
+
+        const OrderHistory = ({ onBack }) => {
+            const { darkMode } = useTheme();
+            const [orders, setOrders] = useState([]);
+            const [filter, setFilter] = useState('all');
+            useEffect(() => { loadOrders(); }, []);
+            const loadOrders = async () => { const allOrders = await db.getOrders(); setOrders(allOrders.reverse()); };
+            const handleStatusChange = async (id, status) => { sounds.click(); await db.updateOrder(id, { status }); await loadOrders(); };
+            const handleSync = async () => { sounds.click(); const result = await syncOrders(); sounds.sync(); await loadOrders(); alert(`Synced: ${result.synced} orders. Failed: ${result.failed}`); };
+            const filteredOrders = filter === 'all' ? orders : orders.filter(o => o.status === filter);
+            const statusColors = { pending: 'bg-yellow-100 text-yellow-700', preparing: 'bg-blue-100 text-blue-700', ready: 'bg-green-100 text-green-700', delivered: 'bg-gray-100 text-gray-600', cancelled: 'bg-red-100 text-red-700' };
+            const statusEmojis = { pending: '⏳', preparing: '👨‍🍳', ready: '✅', delivered: '📦', cancelled: '❌' };
+            const unsyncedCount = orders.filter(o => !o.synced).length;
+
+            return (
+                <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}><FloatingBackground /><header className={`shadow-sm border-b sticky top-0 z-20 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between relative z-10"><div className="flex items-center gap-3"><button onClick={onBack} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-100'}`}>← Back</button><h1 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : ''}`}>📋 Order History</h1></div>{unsyncedCount > 0 && <button onClick={handleSync} className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium">🔄 Sync ({unsyncedCount})</button>}</div></header>
+                <div className="max-w-6xl mx-auto px-4 py-4"><div className="flex gap-2 mb-4 flex-wrap">{['all', 'pending', 'preparing', 'ready', 'delivered', 'cancelled'].map(status => <button key={status} onClick={() => { sounds.click(); setFilter(status); }} className={`px-3 py-2 rounded-xl text-sm font-medium ${filter === status ? 'bg-orange-500 text-white' : darkMode ? 'bg-gray-800 border border-gray-700 text-gray-300' : 'bg-white border border-gray-200'}`}>{status === 'all' ? '📋' : statusEmojis[status]} {status.charAt(0).toUpperCase() + status.slice(1)}</button>)}</div>
+                <div className="space-y-3 relative z-10">{filteredOrders.length === 0 ? <div className="text-center py-12 text-gray-400"><span className="text-5xl block mb-3">📭</span><p>No orders found</p></div> : filteredOrders.map(order => <div key={order.id} className={`rounded-2xl p-4 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><div className="flex items-start justify-between mb-3"><div><div className="flex items-center gap-2"><span className="font-bold">{order.orderId}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[order.status]}`}>{statusEmojis[order.status]} {order.status}</span>{!order.synced && <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-600">⏳ Not synced</span>}</div><p className="text-sm text-gray-500 mt-1">👤 {order.customerName} • {order.orderType}{order.tableNumber && ` • Table ${order.tableNumber}`}</p></div><div className="text-right"><p className="font-bold text-orange-600 text-lg">${order.total.toFixed(2)}</p><p className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p></div></div><div className="bg-gray-50 rounded-xl p-3 mb-3">{order.items.map((item, i) => <span key={i} className="text-sm mr-3">{item.menuItem.emoji} {item.menuItem.name}{item.variant && ` (${item.variant})`} ×{item.quantity}</span>)}{order.notes && <p className="text-sm text-amber-600 mt-1">📝 {order.notes}</p>}</div><div className="flex gap-2">{order.status === 'pending' && <button onClick={() => handleStatusChange(order.id, 'preparing')} className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium">👨‍🍳 Start Preparing</button>}{order.status === 'preparing' && <button onClick={() => handleStatusChange(order.id, 'ready')} className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm font-medium">✅ Mark Ready</button>}{order.status === 'ready' && <button onClick={() => handleStatusChange(order.id, 'delivered')} className="px-3 py-1.5 bg-gray-600 text-white rounded-lg text-sm font-medium">📦 Delivered</button>}{order.status !== 'delivered' && order.status !== 'cancelled' && <button onClick={() => { if (confirm('Cancel this order?')) handleStatusChange(order.id, 'cancelled'); }} className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-medium">❌ Cancel</button>}</div></div>)}</div></div></div>
+            );
+        };
+
+        const Dashboard = ({ onBack }) => {
+            const { darkMode } = useTheme();
+            const [orders, setOrders] = useState([]);
+            useEffect(() => { loadOrders(); }, []);
+            const loadOrders = async () => { const allOrders = await db.getOrders(); setOrders(allOrders); };
+            const today = new Date().toISOString().split('T')[0];
+            const todayOrders = orders.filter(o => o.createdAt.startsWith(today));
+            const totalRevenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
+            const pendingOrders = todayOrders.filter(o => o.status === 'pending').length;
+            const preparingOrders = todayOrders.filter(o => o.status === 'preparing').length;
+            const readyOrders = todayOrders.filter(o => o.status === 'ready').length;
+            const deliveredOrders = todayOrders.filter(o => o.status === 'delivered').length;
+            const unsyncedCount = orders.filter(o => !o.synced).length;
+            const handleSync = async () => { sounds.click(); const result = await syncOrders(); await loadOrders(); alert(`Synced: ${result.synced} orders. Failed: ${result.failed}`); };
+
+            return (
+                <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}><FloatingBackground /><header className={`shadow-sm border-b sticky top-0 z-20 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between relative z-10"><div className="flex items-center gap-3"><button onClick={onBack} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-100'}`}>← Back</button><h1 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : ''}`}>📊 Dashboard</h1></div>{unsyncedCount > 0 && <button onClick={handleSync} className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium">🔄 Sync ({unsyncedCount})</button>}</div></header>
+                <div className="max-w-6xl mx-auto px-4 py-6 relative z-10"><div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"><div className="bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl p-4 text-white"><p className="text-sm opacity-80">💰 Today's Revenue</p><p className="text-3xl font-bold">${totalRevenue.toFixed(2)}</p><p className="text-sm opacity-80">{todayOrders.length} orders</p></div><div className="bg-gradient-to-br from-yellow-400 to-amber-500 rounded-2xl p-4 text-white"><p className="text-sm opacity-80">⏳ Pending</p><p className="text-3xl font-bold">{pendingOrders}</p></div><div className="bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl p-4 text-white"><p className="text-sm opacity-80">👨‍🍳 Preparing</p><p className="text-3xl font-bold">{preparingOrders}</p></div><div className="bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl p-4 text-white"><p className="text-sm opacity-80">✅ Ready</p><p className="text-3xl font-bold">{readyOrders}</p><p className="text-sm opacity-80">{deliveredOrders} delivered</p></div></div>
+                <div className={`rounded-2xl p-6 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><h2 className={`font-bold text-lg mb-4 ${darkMode ? 'text-gray-100' : ''}`}>🕐 Recent Orders</h2><div className="space-y-2">{todayOrders.slice(0, 10).reverse().map(order => <div key={order.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0"><div className="flex items-center gap-3"><span className="font-medium text-sm">{order.orderId}</span><span className="text-sm text-gray-500">{order.customerName}</span></div><div className="flex items-center gap-3"><span className="font-bold text-orange-600">${order.total.toFixed(2)}</span><span className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div></div>)}</div></div></div></div>
+            );
+        };
+
+        const Settings = ({ onBack }) => {
+            const { darkMode } = useTheme();
+            const [settings, setSettings] = useState({ googleSheetUrl: '', restaurantName: 'Restaurant', currency: '$' });
+            const [saved, setSaved] = useState(false);
+            useEffect(() => { loadSettings(); }, []);
+            const loadSettings = async () => { const s = await db.getSettings(); setSettings(s); };
+            const handleSave = async () => { sounds.click(); await db.saveSettings(settings); setSaved(true); sounds.sync(); setTimeout(() => setSaved(false), 2000); };
+            const handleSync = async () => { sounds.click(); const result = await syncOrders(); sounds.sync(); alert(`Sync complete!\n✅ Synced: ${result.synced}\n❌ Failed: ${result.failed}`); };
+
+            return (
+                <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}><FloatingBackground /><header className={`shadow-sm border-b sticky top-0 z-20 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between relative z-10"><div className="flex items-center gap-3"><button onClick={onBack} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-100'}`}>← Back</button><h1 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : ''}`}>⚙️ Settings</h1></div>{saved && <span className="text-green-600 font-medium">✅ Saved!</span>}</div></header>
+                <div className="max-w-3xl mx-auto px-4 py-6 space-y-6 relative z-10"><div className={`rounded-2xl p-6 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><h2 className={`font-bold text-lg mb-1 ${darkMode ? 'text-gray-100' : ''}`}>📊 Google Sheets Integration</h2><p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Connect your Google Sheet to automatically log all orders.</p><div className="space-y-4"><div><label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Google Apps Script Web App URL</label><input type="url" value={settings.googleSheetUrl} onChange={(e) => setSettings(s => ({ ...s, googleSheetUrl: e.target.value }))} placeholder="https://script.google.com/macros/s/..." className={`w-full px-4 py-3 border-2 rounded-xl focus:border-orange-400 outline-none text-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-200'}`} /></div><div className="bg-amber-50 border border-amber-200 rounded-xl p-4"><h3 className="font-medium text-amber-800 mb-2">📝 Setup Instructions:</h3><ol className="text-sm text-amber-700 space-y-1 list-decimal list-inside"><li>Open Google Sheets → Extensions → Apps Script</li><li>Paste the Apps Script code (see below)</li><li>Deploy → New Deployment → Web App</li><li>Set "Execute as: Me" and "Who has access: Anyone"</li><li>Copy the Web App URL and paste it above</li></ol></div><details className="bg-gray-50 rounded-xl p-4"><summary className="font-medium text-gray-700 cursor-pointer">📄 View Apps Script Code</summary><pre className="mt-3 bg-gray-900 text-green-400 p-4 rounded-xl text-xs overflow-x-auto whitespace-pre-wrap">{`function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+  
+  // Add header row if sheet is empty
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      'Order ID', 'Timestamp', 'Customer Name', 
+      'Phone', 'Order Type', 'Table', 'Items', 
+      'Total', 'Notes', 'Status', 'Staff', 'Last Updated'
+    ]);
   }
   
-  isSyncing = true;
-  updateSyncStatus('saving', 'Syncing...');
+  // Check if order already exists
+  var orderId = data.orderId;
+  var allData = sheet.getDataRange().getValues();
+  var existingRow = -1;
+  var currentStatus = '';
   
-  try {
-    const response = await fetch(SYNC_URL);
-    if (response.ok) {
-      const cloudData = await response.json();
-      // Only update if cloud data has content (prevents overwriting with empty sheet)
-      if (cloudData && cloudData.products && cloudData.kitchen) {
-        state = Object.assign(clone(DEFAULTS), cloudData);
-        saveToLocalStorage();
-        renderAll();
-        recompute();
-        updateSyncStatus('synced', 'Synced');
-      } else {
-        updateSyncStatus('synced', 'Synced (Empty Cloud)');
-      }
+  for (var i = 1; i < allData.length; i++) {
+    if (allData[i][0] === orderId) {
+      existingRow = i + 1;
+      currentStatus = allData[i][9];
+      break;
     }
-  } catch (error) {
-    console.error("Sync failed:", error);
-    updateSyncStatus('offline', 'Offline');
-  } finally {
-    isSyncing = false;
-  }
-}
-
-function syncToCloud() {
-  if (!SYNC_URL || SYNC_URL.includes('PASTE_YOUR') || !navigator.onLine) {
-    updateSyncStatus(navigator.onLine ? 'synced' : 'offline', navigator.onLine ? 'Local Saved' : 'Offline');
-    return;
   }
   
-  updateSyncStatus('saving', 'Saving...');
-  
-  // Use no-cors to avoid CORS errors with Google Apps Script POST
-  fetch(SYNC_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(state)
-  }).then(() => {
-    updateSyncStatus('synced', 'Synced');
-  }).catch(() => {
-    updateSyncStatus('offline', 'Offline');
-  });
-}
-
-function debouncedSave() {
-  saveToLocalStorage();
-  clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(() => {
-    syncToCloud();
-  }, 1500); // Wait 1.5s after last change to sync
-}
-
-// Listen for internet coming back online
-window.addEventListener('online', () => {
-  updateSyncStatus('saving', 'Reconnecting...');
-  syncToCloud();
-});
-window.addEventListener('offline', () => {
-  updateSyncStatus('offline', 'Offline');
-});
-
-function setCell(id, txt){
-  const el = document.getElementById(id); if(!el) return;
-  if(el.textContent !== txt){ el.textContent = txt; el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
-}
-
-/* ================= pair tables (qty × rate) ================= */
-const PAIR_COLS = {
-  kitchen:  {item:"Equipment item", qty:"Qty", rate:"Unit price (Rs)"},
-  fitout:   {item:"Item", qty:"Qty", rate:"Unit price (Rs)"},
-  preopen:  {item:"Item", qty:"Qty", rate:"Amount (Rs)"},
-  materials:{item:"Raw material / packaging", qty:"Qty", rate:"Rate (Rs)"},
-  labor:    {item:"Role", qty:"Staff", rate:"Monthly pay (Rs)"},
-  overhead: {item:"Expense", qty:"Qty", rate:"Monthly cost (Rs)"}
-};
-const FLAG_KEYS = ["kitchen","fitout","preopen"];
-
-function renderPairs(key){
-  const cols = PAIR_COLS[key], hasFlag = FLAG_KEYS.includes(key);
-  const mount = document.getElementById("tbl-" + key);
-  mount.innerHTML = "";
-  const wrap = document.createElement("div"); wrap.className = "tbl-wrap";
-  const table = document.createElement("table"); table.className = "grid";
-  table.innerHTML = `<thead><tr><th>${cols.item}</th><th class="num">${cols.qty}</th><th class="num">${cols.rate}</th><th class="num">Total</th>${hasFlag ? '<th class="flagcell" title="Flag as unnecessary at launch / can defer"></th>' : ""}<th></th></tr></thead>`;
-  const tb = document.createElement("tbody");
-  state[key].forEach((r, i) => {
-    const tr = document.createElement("tr");
-    tr.className = r.opt ? "flagged" : "";
-    tr.innerHTML =
-      `<td><input class="txt" type="text" value="${esc(r.name)}" placeholder="Item name" aria-label="Item name">` +
-        (r.opt && r.note ? `<div class="flagnote">⚑ ${esc(r.note)}</div>` : "") + `</td>` +
-      `<td class="num"><input type="number" min="0" step="1" value="${r.qty}" aria-label="${cols.qty}"></td>` +
-      `<td class="num"><input type="number" min="0" step="50" value="${r.price}" aria-label="${cols.rate}"></td>` +
-      `<td class="num total" data-tot="${key}">—</td>` +
-      (hasFlag ? `<td class="flagcell"><button class="flag ${r.opt ? "on" : ""}" title="Flag as unnecessary at launch / can defer">⚑</button></td>` : "") +
-      `<td class="delcell"><button class="del" title="Remove row">✕</button></td>`;
-    const inputs = tr.querySelectorAll("input");
-    inputs[0].oninput = e => { r.name = e.target.value; debouncedSave(); };
-    inputs[1].oninput = e => { r.qty = val(e); debouncedSave(); recompute(); };
-    inputs[2].oninput = e => { r.price = val(e); debouncedSave(); recompute(); };
-    if(hasFlag){
-      tr.querySelector(".flag").onclick = () => {
-        r.opt = !r.opt;
-        if(r.opt && !r.note) r.note = "Marked optional — review before spending.";
-        renderPairs(key); debouncedSave(); recompute();
-      };
-    }
-    tr.querySelector(".del").onclick = () => { state[key].splice(i,1); renderPairs(key); debouncedSave(); recompute(); };
-    tb.appendChild(tr);
-  });
-  table.appendChild(tb);
-  const tf = document.createElement("tfoot");
-  tf.innerHTML = `<tr><td colspan="3">Subtotal</td><td class="num total" id="sub-${key}">—</td>${hasFlag ? "<td></td>" : ""}<td></td></tr>`;
-  table.appendChild(tf);
-  wrap.appendChild(table); mount.appendChild(wrap);
-  const btn = document.createElement("button");
-  btn.className = "btn-add"; btn.textContent = "+ Add item";
-  btn.onclick = () => {
-    state[key].push({name:"", qty:1, price:0});
-    renderPairs(key); debouncedSave(); recompute();
-    const names = mount.querySelectorAll("input.txt"); names[names.length-1].focus();
-  };
-  mount.appendChild(btn);
-}
-
-/* ================= products table ================= */
-function renderProducts(){
-  const mount = document.getElementById("tbl-products");
-  mount.innerHTML = "";
-  const wrap = document.createElement("div"); wrap.className = "tbl-wrap";
-  const table = document.createElement("table"); table.className = "grid";
-  table.innerHTML = `<thead><tr><th>On</th><th>Product / station</th><th class="num">Price (Rs)</th><th class="num">Units/day</th><th class="num">Recipe Cost (Rs)</th><th class="num">Daily sales</th><th class="num">Monthly profit</th><th></th></tr></thead>`;
-  const tb = document.createElement("tbody");
-  state.products.forEach((p, i) => {
-    const tr = document.createElement("tr");
-    tr.className = "prow" + (p.on ? "" : " off");
-    tr.innerHTML =
-      `<td><input type="checkbox" class="sw" ${p.on ? "checked" : ""} aria-label="Station on/off"></td>` +
-      `<td><input class="txt" type="text" value="${esc(p.name)}" placeholder="Product name"></td>` +
-      `<td class="num"><input type="number" min="0" step="10" value="${p.price}"></td>` +
-      `<td class="num"><input type="number" min="0" step="1" value="${p.units}"></td>` +
-      `<td class="num" id="pc-${i}" style="color:var(--muted); font-size:13px">—</td>` +
-      `<td class="num total" id="pd-${i}">—</td>` +
-      `<td class="num total" id="pm-${i}" style="color:var(--money)">—</td>` +
-      `<td class="delcell"><button class="del" title="Remove product">✕</button></td>`;
-    const inputs = tr.querySelectorAll("input");
-    inputs[0].onchange = e => { p.on = e.target.checked; tr.classList.toggle("off", !p.on); debouncedSave(); recompute(); };
-    inputs[1].oninput  = e => { 
-        const oldName = p.name; p.name = e.target.value; 
-        state.recipes.forEach(r => { if(r.product === oldName) r.product = p.name; });
-        debouncedSave(); recompute(); 
-    };
-    inputs[2].oninput  = e => { p.price = val(e); debouncedSave(); recompute(); };
-    inputs[3].oninput  = e => { p.units = val(e); debouncedSave(); recompute(); };
-    tr.querySelector(".del").onclick = () => { 
-        const deletedName = p.name; state.products.splice(i,1); 
-        state.recipes = state.recipes.filter(r => r.product !== deletedName);
-        renderProducts(); renderRecipes(); debouncedSave(); recompute(); 
-    };
-    tb.appendChild(tr);
-  });
-  table.appendChild(tb);
-  const tf = document.createElement("tfoot");
-  tf.innerHTML = `<tr><td colspan="4">Totals — active stations only</td><td></td><td class="num total" id="pd-total">—</td><td class="num total" id="pm-total" style="color:var(--money)">—</td><td></td></tr>`;
-  table.appendChild(tf);
-  wrap.appendChild(table); mount.appendChild(wrap);
-  const btn = document.createElement("button");
-  btn.className = "btn-add"; btn.textContent = "+ Add product";
-  btn.onclick = () => {
-    state.products.push({name:"New item", on:true, price:250, units:20});
-    renderProducts(); renderRecipes(); debouncedSave(); recompute();
-    const names = mount.querySelectorAll("input.txt"); names[names.length-1].focus();
-  };
-  mount.appendChild(btn);
-}
-
-/* ================= recipes table ================= */
-function renderRecipes(){
-  const mount = document.getElementById("tbl-recipes");
-  mount.innerHTML = "";
-  if (state.products.length === 0) {
-    mount.innerHTML = `<div class="card"><p class="hint">Add products in the 'Sales menu' tab first to start building recipes.</p></div>`;
-    return;
+  // Skip update if status hasn't changed
+  if (existingRow > 0 && currentStatus === data.status) {
+    return ContentService
+      .createTextOutput(JSON.stringify({status: 'success', message: 'no_change'}))
+      .setMimeType(ContentService.MimeType.JSON);
   }
-  const wrap = document.createElement("div"); wrap.className = "cards"; 
-  state.products.forEach((p, pIdx) => {
-    const card = document.createElement("div"); card.className = "card";
-    const ingredients = state.recipes.filter(r => r.product === p.name);
-    let totalCost = 0;
-    ingredients.forEach(r => totalCost += (+r.qty||0)*(+r.cost||0));
-    const margin = p.price > 0 ? ((p.price - totalCost) / p.price * 100) : 0;
-    let marginClass = "margin-good";
-    if(margin < 30) marginClass = "margin-bad";
-    else if(margin < 50) marginClass = "margin-low";
-
-    card.innerHTML = `
-      <div class="card-head">
-        <div><span class="eyebrow">Recipe</span><h2 id="rhead-${pIdx}">${esc(p.name)}</h2></div>
-        <div class="hint" style="text-align:right">
-          Selling Price: <input type="number" class="recipe-price-input" value="${p.price}" min="0" step="10" id="rprice-${pIdx}">
-          <span class="sync-indicator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0 1 15-6.7M20 15a9 9 0 0 1-15 6.7"/></svg> syncs to Financial Model</span><br>
-          Unit Cost: <b style="color:var(--amber)" id="pcost-${pIdx}">${fmt(totalCost)}</b> 
-          <span class="chip ${marginClass}" id="pmargin-${pIdx}">${margin.toFixed(0)}% margin</span>
-        </div>
-      </div>
-      <div class="tbl-wrap">
-        <table class="grid">
-          <thead><tr><th>Ingredient</th><th class="num">Qty / Portion</th><th class="num">Unit Cost (Rs)</th><th class="num">Line Total</th><th></th></tr></thead>
-          <tbody></tbody>
-          <tfoot><tr><td colspan="3">Total Recipe Cost</td><td class="num total" id="rtotal-${pIdx}" style="color:var(--amber)">${fmt(totalCost)}</td><td></td></tr></tfoot>
-        </table>
-      </div>
-    `;
-    const tbody = card.querySelector("tbody");
-    ingredients.forEach((r) => {
-        const actualIdx = state.recipes.indexOf(r);
-        const tr = document.createElement("tr");
-        const lineTotal = (+r.qty||0) * (+r.cost||0);
-        tr.innerHTML = `
-          <td><input class="txt" type="text" value="${esc(r.ingredient)}" placeholder="e.g., Flour 250g"></td>
-          <td class="num"><input type="number" min="0" step="0.1" value="${r.qty}"></td>
-          <td class="num"><input type="number" min="0" step="1" value="${r.cost}"></td>
-          <td class="num total" id="rline-${actualIdx}">${fmt(lineTotal)}</td>
-          <td class="delcell"><button class="del" title="Remove">✕</button></td>
-        `;
-        const inputs = tr.querySelectorAll("input");
-        inputs[0].oninput = e => { r.ingredient = e.target.value; debouncedSave(); };
-        inputs[1].oninput = e => { r.qty = val(e); debouncedSave(); recompute(); };
-        inputs[2].oninput = e => { r.cost = val(e); debouncedSave(); recompute(); };
-        tr.querySelector(".del").onclick = () => { state.recipes.splice(actualIdx, 1); debouncedSave(); renderRecipes(); recompute(); };
-        tbody.appendChild(tr);
-    });
-    const btn = document.createElement("button");
-    btn.className = "btn-add"; btn.textContent = "+ Add ingredient to " + p.name;
-    btn.onclick = () => { state.recipes.push({product: p.name, ingredient: "", qty: 1, cost: 0}); debouncedSave(); renderRecipes(); recompute(); };
-    card.appendChild(btn);
-    wrap.appendChild(card);
-  });
-  mount.appendChild(wrap);
-  state.products.forEach((p, pIdx) => {
-    const priceInput = document.getElementById("rprice-" + pIdx);
-    if(priceInput) { priceInput.oninput = e => { p.price = val(e); debouncedSave(); recompute(); }; }
-  });
-}
-
-/* ================= recompute everything ================= */
-function recompute(){
-  const sum = k => state[k].reduce((s,r) => s + (+r.qty||0)*(+r.price||0), 0);
-  const totals = {};
-  ["kitchen","fitout","preopen","materials","labor","overhead"].forEach(k => {
-    totals[k] = sum(k); setCell("sub-" + k, fmt(totals[k]));
-    document.querySelectorAll(`[data-tot="${k}"]`).forEach((c, i) => {
-      const r = state[k][i]; const txt = fmt((+r.qty||0)*(+r.price||0));
-      if(c.textContent !== txt){ c.textContent = txt; c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); }
-    });
-  });
-  let flagged = 0, flagCount = 0;
-  FLAG_KEYS.forEach(k => state[k].forEach(r => { if(r.opt){ flagged += (+r.qty||0)*(+r.price||0); flagCount++; } }));
-  const fullSetup = totals.kitchen + totals.fitout + totals.preopen;
-  const leanSetup = fullSetup - flagged;
-  const setupUsed = state.lean ? leanSetup : fullSetup;
-  setCell("rv-full", fmt(fullSetup)); setCell("rv-flag", fmt(flagged) + "  ·  " + flagCount + " item" + (flagCount === 1 ? "" : "s")); setCell("rv-lean", fmt(leanSetup));
-  $("#btn-full").classList.toggle("active", !state.lean); $("#btn-lean").classList.toggle("active", !!state.lean); $("#inv-view").textContent = state.lean ? "lean" : "full";
-
-  const recipeCosts = {};
-  state.products.forEach(p => recipeCosts[p.name] = 0);
-  state.recipes.forEach((r, idx) => {
-    if (!recipeCosts[r.product]) recipeCosts[r.product] = 0;
-    const lineTotal = (+r.qty || 0) * (+r.cost || 0);
-    recipeCosts[r.product] += lineTotal;
-    const lineEl = document.getElementById("rline-" + idx);
-    if(lineEl) { const txt = fmt(lineTotal); if(lineEl.textContent !== txt){ lineEl.textContent = txt; lineEl.classList.remove("flash"); void lineEl.offsetWidth; lineEl.classList.add("flash"); } }
-  });
-
-  state.products.forEach((p, pIdx) => {
-      const cost = recipeCosts[p.name] || 0; const margin = p.price > 0 ? ((p.price - cost) / p.price * 100) : 0;
-      let marginClass = "margin-good"; if(margin < 30) marginClass = "margin-bad"; else if(margin < 50) marginClass = "margin-low";
-      const costEl = document.getElementById("pcost-" + pIdx);
-      if(costEl) { const txt = fmt(cost); if(costEl.textContent !== txt){ costEl.textContent = txt; costEl.classList.remove("flash"); void costEl.offsetWidth; costEl.classList.add("flash"); } }
-      const marginEl = document.getElementById("pmargin-" + pIdx);
-      if(marginEl) { marginEl.textContent = margin.toFixed(0) + "% margin"; marginEl.className = "chip " + marginClass; }
-      const rtotalEl = document.getElementById("rtotal-" + pIdx);
-      if(rtotalEl) { const txt = fmt(cost); if(rtotalEl.textContent !== txt){ rtotalEl.textContent = txt; rtotalEl.classList.remove("flash"); void rtotalEl.offsetWidth; rtotalEl.classList.add("flash"); } }
-      const priceInput = document.getElementById("rprice-" + pIdx);
-      if(priceInput && document.activeElement !== priceInput) priceInput.value = p.price;
-  });
-
-  let dRev = 0, dCost = 0, dUnits = 0, dProfit = 0;
-  const od = +state.openDays || 0;
-  state.products.forEach((p, i) => {
-    const calcCost = recipeCosts[p.name] || 0; const pr = +p.price||0, u = +p.units||0;
-    const dr = p.on ? pr*u : 0, mp = p.on ? (pr-calcCost)*u*od : 0;
-    setCell("pc-" + i, fmt(calcCost)); setCell("pd-" + i, fmt(dr)); setCell("pm-" + i, fmt(mp));
-    if(p.on){ dRev += dr; dCost += calcCost*u; dUnits += u; dProfit += mp; }
-  });
-  const mRev = dRev*od, mFood = dCost*od, gross = mRev - mFood;
-  const opex = totals.labor + totals.overhead, net = gross - opex;
-  const margin = mRev > 0 ? gross/mRev : 0;
-  const beMonthlyRev = margin > 0 ? opex/margin : 0;
-  const beDaily = od > 0 ? beMonthlyRev / od : 0;
-  const avg = dUnits > 0 ? dRev/dUnits : 0;
-  const buffer = (+state.bufferMonths||0)*opex;
-  const invest = setupUsed + totals.materials + buffer;
-  const payback = net > 0 ? invest/net : null;
-
-  setCell("pd-total", fmt(dRev)); setCell("pm-total", fmt(dProfit));
-  setCell("r-mrev", fmt(mRev)); setCell("r-mfood", fmt(mFood)); setCell("r-gross", fmt(gross)); setCell("r-gmargin", mRev>0 ? Math.round(margin*100)+"% margin" : "—");
-  setCell("r-opex", fmt(opex));
-  const netEl = document.getElementById("r-net"); setCell("r-net", fmt(net));
-  netEl.classList.remove("pos","neg"); netEl.classList.add(net >= 0 ? "pos" : "neg");
-  setCell("r-nem", mRev>0 ? Math.round(net/mRev*100)+"% of sales" : "—");
-
-  const scale = Math.max(1, (mFood + opex) / (mRev || 1));
-  const wF = mRev>0 ? Math.min(100, mFood/mRev*100/scale) : 0;
-  const wO = mRev>0 ? Math.min(100 - wF, opex/mRev*100/scale) : 0;
-  const wN = net > 0 ? Math.min(100, net/mRev*100) : 0;
-  $("#bar-food").style.width = wF + "%"; $("#bar-opex").style.width = wO + "%"; $("#bar-net").style.width  = wN + "%";
-  setCell("lg-food", mRev>0 ? Math.round(mFood/mRev*100)+"%" : "—"); setCell("lg-opex", mRev>0 ? Math.round(opex/mRev*100)+"%" : "—"); setCell("lg-net",  mRev>0 ? Math.round(net/mRev*100)+"%" : "—");
-
-  setCell("be-daily", beDaily>0 ? fmt(beDaily) : "—"); setCell("be-orders", beDaily>0 && avg>0 ? Math.ceil(beDaily/avg) + " orders" : "—"); setCell("avg-ticket", avg>0 ? fmt(avg) : "—");
-  setCell("inv-setup", fmt(setupUsed)); setCell("inv-mat", fmt(totals.materials)); setCell("inv-buf", fmt(buffer)); setCell("inv-total", fmt(invest));
-  setCell("pb-val", payback ? payback.toFixed(1) + " months" : "— (net loss)");
-
-  const tkNet = $("#tk-net");
-  setCell("tk-invest", compact(invest)); $("#tk-invest").title = fmt(invest); setCell("tk-opex", compact(opex)); $("#tk-opex").title = fmt(opex);
-  setCell("tk-rev", compact(mRev)); $("#tk-rev").title = fmt(mRev); setCell("tk-net", compact(net)); $("#tk-net").title = fmt(net);
-  tkNet.classList.remove("pos","neg"); tkNet.classList.add(net >= 0 ? "pos" : "neg");
-  setCell("tk-days", od + " open days"); setCell("tk-payback", payback ? "payback ≈ " + payback.toFixed(1) + " months" : "revisit pricing");
-  $("#tk-inv-sub").textContent = (state.lean ? "lean view — skips " : "full view — includes ") + flagCount + " flagged";
-  setCell("tb-setup", compact(setupUsed)); setCell("tb-opex", compact(opex)); setCell("tb-net", compact(net));
-}
-
-/* ================= chrome ================= */
-function renderAll(){
-  Object.keys(PAIR_COLS).forEach(k => renderPairs(k));
-  renderProducts(); renderRecipes();
-  $("#in-days").value = state.openDays; $("#in-buffer").value = state.bufferMonths;
-}
-$("#in-days").addEventListener("input", e => { state.openDays = val(e); debouncedSave(); recompute(); });
-$("#in-buffer").addEventListener("input", e => { state.bufferMonths = val(e); debouncedSave(); recompute(); });
-$("#btn-full").onclick = () => { state.lean = false; debouncedSave(); recompute(); };
-$("#btn-lean").onclick = () => { state.lean = true;  debouncedSave(); recompute(); };
-
-document.querySelectorAll(".tab").forEach(b => {
-  b.onclick = () => {
-    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
-    document.querySelectorAll(".panel").forEach(x => x.classList.remove("active"));
-    b.classList.add("active"); document.getElementById(b.dataset.panel).classList.add("active");
-  };
-});
-
-function applyTheme(t){
-  document.documentElement.dataset.theme = t;
-  $("#icoMoon").style.display = t === "dark" ? "none" : ""; $("#icoSun").style.display  = t === "dark" ? "" : "none";
-  try{ localStorage.setItem("rp_theme", t); }catch(e){}
-}
-$("#btnTheme").onclick = () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
-$("#btnPrint").onclick = () => window.print();
-$("#btnReset").onclick = () => {
-  if(confirm("Reset every number back to the default plan? This will also clear the cloud sheet on next sync.")){
-    state = clone(DEFAULTS);
-    try{ localStorage.removeItem("rp_state_v8"); }catch(e){}
-    renderAll(); recompute(); debouncedSave();
-  }
-};
-
-/* init */
-(function(){
-  let t = "light";
-  try{ t = localStorage.getItem("rp_theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); }catch(e){}
-  applyTheme(t);
   
-  // Load local state first
-  try{
-    const saved = JSON.parse(localStorage.getItem("rp_state_v8"));
-    if(saved && saved.products && saved.kitchen) state = Object.assign(clone(DEFAULTS), saved);
-  }catch(e){}
+  var now = new Date();
   
-  renderAll();
-  recompute();
-  
-  // Attempt cloud sync if online
-  if (navigator.onLine && SYNC_URL && !SYNC_URL.includes('PASTE_YOUR')) {
-    syncFromCloud();
+  if (existingRow > 0) {
+    // Update only status and last updated
+    sheet.getRange(existingRow, 10).setValue(data.status);
+    sheet.getRange(existingRow, 12).setValue(now);
   } else {
-    updateSyncStatus(navigator.onLine ? 'synced' : 'offline', navigator.onLine ? 'Local Saved' : 'Offline');
+    // Add new row
+    sheet.appendRow([
+      data.orderId,
+      new Date(data.timestamp),
+      data.customerName,
+      data.customerPhone,
+      data.orderType,
+      data.tableNumber,
+      data.items,
+      data.total,
+      data.notes,
+      data.status,
+      data.createdBy,
+      now
+    ]);
   }
-})();
-</script>
+  
+  return ContentService
+    .createTextOutput(JSON.stringify({status: 'success'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}`}</pre></details></div></div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"><h2 className="font-bold text-lg mb-4">🏪 Restaurant Settings</h2><div className="space-y-4"><div><label className="text-sm font-medium text-gray-600 mb-1 block">Restaurant Name</label><input type="text" value={settings.restaurantName} onChange={(e) => setSettings(s => ({ ...s, restaurantName: e.target.value }))} className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" /></div><div><label className="text-sm font-medium text-gray-600 mb-1 block">Currency Symbol</label><input type="text" value={settings.currency} onChange={(e) => setSettings(s => ({ ...s, currency: e.target.value }))} className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" maxLength={3} /></div></div></div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"><h2 className="font-bold text-lg mb-4">🔄 Sync Controls</h2><p className="text-sm text-gray-500 mb-4">Orders are automatically synced every 30 seconds when online.</p><button onClick={handleSync} className="px-6 py-3 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600">🔄 Sync Now</button></div>
+                <button onClick={handleSave} className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-lg rounded-2xl">💾 Save Settings</button></div></div>
+            );
+        };
+
+        // Menu Management Component
+        const MenuManagement = ({ onBack }) => {
+            const { darkMode } = useTheme();
+            const [items, setItems] = useState([]);
+            const [editingItem, setEditingItem] = useState(null);
+            const [showAddForm, setShowAddForm] = useState(false);
+            const [formData, setFormData] = useState({
+                id: '', name: '', category: 'pizza', price: 0, emoji: '🍕',
+                variants: [], hasVariants: false
+            });
+
+            useEffect(() => { loadItems(); }, []);
+
+            const loadItems = async () => {
+                const menuItems = await db.getMenuItems();
+                setItems(menuItems);
+            };
+
+            const handleAdd = () => {
+                sounds.click();
+                setFormData({ id: '', name: '', category: 'pizza', price: 0, emoji: '🍕', variants: [], hasVariants: false });
+                setShowAddForm(true);
+                setEditingItem(null);
+            };
+
+            const handleEdit = (item) => {
+                sounds.click();
+                setFormData({
+                    ...item,
+                    hasVariants: item.variants && item.variants.length > 0
+                });
+                setEditingItem(item);
+                setShowAddForm(true);
+            };
+
+            const handleDelete = async (id) => {
+                if (confirm('Are you sure you want to delete this item?')) {
+                    sounds.remove();
+                    await db.deleteMenuItem(id);
+                    await loadItems();
+                }
+            };
+
+            const handleSave = async () => {
+                sounds.click();
+                const itemToSave = {
+                    id: formData.id || `item-${Date.now()}`,
+                    name: formData.name,
+                    category: formData.category,
+                    price: parseFloat(formData.price),
+                    emoji: formData.emoji,
+                    variants: formData.hasVariants ? formData.variants.map(v => ({
+                        name: v.name,
+                        price: parseFloat(v.price)
+                    })) : undefined
+                };
+
+                await db.saveMenuItem(itemToSave);
+                sounds.sync();
+                setShowAddForm(false);
+                setEditingItem(null);
+                await loadItems();
+            };
+
+            const addVariant = () => {
+                setFormData({
+                    ...formData,
+                    variants: [...formData.variants, { name: '', price: 0 }]
+                });
+            };
+
+            const removeVariant = (index) => {
+                setFormData({
+                    ...formData,
+                    variants: formData.variants.filter((_, i) => i !== index)
+                });
+            };
+
+            const updateVariant = (index, field, value) => {
+                const newVariants = [...formData.variants];
+                newVariants[index] = { ...newVariants[index], [field]: value };
+                setFormData({ ...formData, variants: newVariants });
+            };
+
+            return (
+                <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+                    <FloatingBackground />
+                    <header className={`shadow-sm border-b sticky top-0 z-20 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+                        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between relative z-10">
+                            <div className="flex items-center gap-3">
+                                <button onClick={onBack} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-100'}`}>← Back</button>
+                                <h1 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : ''}`}>🍽️ Menu Management</h1>
+                            </div>
+                            <button onClick={handleAdd} className="px-4 py-2 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600">+ Add Item</button>
+                        </div>
+                    </header>
+
+                    <div className="max-w-6xl mx-auto px-4 py-6 relative z-10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {items.map(item => (
+                                <div key={item.id} className={`rounded-2xl p-4 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-4xl">{item.emoji}</span>
+                                            <div>
+                                                <h3 className={`font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{item.name}</h3>
+                                                <p className={`text-sm capitalize ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{item.category}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {item.variants && item.variants.length > 0 ? (
+                                        <div className="mb-3">
+                                            <p className="text-xs text-gray-500 mb-1">Variants:</p>
+                                            {item.variants.map((v, i) => (
+                                                <div key={i} className="flex justify-between text-sm py-1">
+                                                    <span>{v.name}</span>
+                                                    <span className="font-medium text-orange-600">${v.price.toFixed(2)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-orange-600 font-bold mb-3">${item.price.toFixed(2)}</p>
+                                    )}
+
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleEdit(item)} className="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600">✏️ Edit</button>
+                                        <button onClick={() => handleDelete(item.id)} className="px-3 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600">🗑️</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {items.length === 0 && (
+                            <div className="text-center py-12 text-gray-400">
+                                <span className="text-5xl block mb-3">🍽️</span>
+                                <p>No menu items yet. Click "+ Add Item" to get started!</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Add/Edit Form Modal */}
+                    {showAddForm && (
+                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowAddForm(false)}>
+                            <div className="bg-white rounded-3xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                                <h2 className="text-xl font-bold mb-4">{editingItem ? '✏️ Edit Item' : '+ Add New Item'}</h2>
+                                
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600 mb-1 block">Emoji</label>
+                                        <input type="text" value={formData.emoji} onChange={(e) => setFormData({...formData, emoji: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none text-2xl" maxLength={2} />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600 mb-1 block">Item Name</label>
+                                        <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="e.g., Margherita Pizza" className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600 mb-1 block">Category</label>
+                                        <select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none">
+                                            <option value="pizza">🍕 Pizza</option>
+                                            <option value="burger">🍔 Burger</option>
+                                            <option value="shawarma">🌯 Shawarma</option>
+                                            <option value="sides">🍟 Sides</option>
+                                            <option value="drinks">🥤 Drinks</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="flex items-center gap-2 mb-2">
+                                            <input type="checkbox" checked={formData.hasVariants} onChange={(e) => setFormData({...formData, hasVariants: e.target.checked, variants: e.target.checked ? [{ name: 'Small', price: formData.price }] : []})} className="w-4 h-4" />
+                                            <span className="text-sm font-medium text-gray-600">Has variants (sizes/options)</span>
+                                        </label>
+                                    </div>
+
+                                    {!formData.hasVariants && (
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600 mb-1 block">Price ($)</label>
+                                            <input type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" />
+                                        </div>
+                                    )}
+
+                                    {formData.hasVariants && (
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600 mb-2 block">Variants</label>
+                                            <div className="space-y-2">
+                                                {formData.variants.map((variant, index) => (
+                                                    <div key={index} className="flex gap-2 items-center">
+                                                        <input type="text" value={variant.name} onChange={(e) => updateVariant(index, 'name', e.target.value)} placeholder="Name" className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none text-sm" />
+                                                        <input type="number" step="0.01" value={variant.price} onChange={(e) => updateVariant(index, 'price', e.target.value)} placeholder="Price" className="w-24 px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none text-sm" />
+                                                        <button onClick={() => removeVariant(index)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">✕</button>
+                                                    </div>
+                                                ))}
+                                                <button onClick={addVariant} className="w-full py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200">+ Add Variant</button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="flex gap-2 pt-4">
+                                        <button onClick={() => setShowAddForm(false)} className="flex-1 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300">Cancel</button>
+                                        <button onClick={handleSave} disabled={!formData.name || formData.price <= 0} className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl disabled:opacity-50">💾 Save</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // Main App
+        const App = () => {
+            const [view, setView] = useState('name-entry');
+            const [userName, setUserName] = useState('');
+            const [isAdmin, setIsAdmin] = useState(false);
+            const [menuItems, setMenuItems] = useState([]);
+            const [darkMode, setDarkMode] = useState(() => {
+                const saved = localStorage.getItem('darkMode');
+                return saved === 'true';
+            });
+
+            const toggleDarkMode = () => {
+                const newMode = !darkMode;
+                setDarkMode(newMode);
+                localStorage.setItem('darkMode', newMode.toString());
+            };
+
+            useEffect(() => {
+                const params = new URLSearchParams(window.location.search);
+                const ref = params.get('ref');
+                if (ref === 'Admin') {
+                    setIsAdmin(true);
+                    setUserName('Admin');
+                    setView('order-taking');
+                }
+                const savedUser = localStorage.getItem('restaurant_user');
+                if (savedUser && ref !== 'Admin') {
+                    setUserName(savedUser);
+                    setView('order-taking');
+                }
+                
+                // Initialize menu items and load them
+                db.initializeMenuItems(defaultMenuItems).then(() => {
+                    loadMenuItems();
+                });
+
+                // Auto-sync every 30 seconds
+                const interval = setInterval(() => { if (navigator.onLine) syncOrders(); }, 30000);
+                return () => clearInterval(interval);
+            }, []);
+
+            const loadMenuItems = async () => {
+                const items = await db.getMenuItems();
+                setMenuItems(items);
+            };
+
+            const handleNameSubmit = (name) => {
+                if (audioContext.state === 'suspended') audioContext.resume();
+                setUserName(name);
+                localStorage.setItem('restaurant_user', name);
+                setView('order-taking');
+            };
+
+            return (
+                <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
+                    <div className={darkMode ? 'dark' : ''}>
+                        {view === 'name-entry' && <NameEntry onSubmit={handleNameSubmit} />}
+                        {view === 'order-taking' && <OrderTaking userName={userName} isAdmin={isAdmin} menuItems={menuItems} onViewHistory={() => setView('history')} onViewDashboard={() => setView('dashboard')} onViewSettings={() => setView('settings')} onViewMenu={() => setView('menu')} />}
+                        {view === 'history' && <OrderHistory onBack={() => setView('order-taking')} />}
+                        {view === 'dashboard' && <Dashboard onBack={() => setView('order-taking')} />}
+                        {view === 'settings' && <Settings onBack={() => setView('order-taking')} />}
+                        {view === 'menu' && <MenuManagement onBack={() => { setView('order-taking'); loadMenuItems(); }} />}
+                    </div>
+                </ThemeContext.Provider>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
 </body>
 </html>
