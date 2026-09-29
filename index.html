@@ -15,19 +15,42 @@
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .animate-bounce { animation: bounce 1s infinite; }
         
-        /* Dark mode styles */
-        .dark { background-color: #1a1a1a; color: #ffffff; }
-        .dark .bg-white { background-color: #2d2d2d; }
-        .dark .bg-gray-50 { background-color: #1a1a1a; }
-        .dark .bg-gray-100 { background-color: #3a3a3a; }
-        .dark .text-gray-800 { color: #e5e5e5; }
-        .dark .text-gray-700 { color: #d4d4d4; }
-        .dark .text-gray-600 { color: #a3a3a3; }
-        .dark .text-gray-500 { color: #737373; }
-        .dark .text-gray-400 { color: #525252; }
-        .dark .border-gray-100 { border-color: #404040; }
+        /* --- IMPROVED DARK MODE STYLES FOR BETTER READABILITY --- */
+        .dark { background-color: #121212; color: #f3f4f6; }
+        .dark .bg-white { background-color: #1e1e1e; }
+        .dark .bg-gray-50 { background-color: #27272a; }
+        .dark .bg-gray-100 { background-color: #3f3f46; }
+        .dark .bg-gray-200 { background-color: #525252; }
+        .dark .text-gray-800 { color: #f3f4f6; }
+        .dark .text-gray-700 { color: #e5e7eb; }
+        .dark .text-gray-600 { color: #d1d5db; }
+        .dark .text-gray-500 { color: #9ca3af; } /* Fixed: was too dark (#737373) */
+        .dark .text-gray-400 { color: #9ca3af; } /* Fixed: was nearly invisible (#525252) */
+        .dark .text-gray-300 { color: #d1d5db; }
+        .dark .text-gray-200 { color: #e5e7eb; }
+        .dark .border-gray-50 { border-color: #27272a; }
+        .dark .border-gray-100 { border-color: #3f3f46; }
         .dark .border-gray-200 { border-color: #525252; }
-        .dark .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3); }
+        .dark .border-gray-300 { border-color: #71717a; }
+        .dark .border-gray-600 { border-color: #525252; }
+        .dark .border-gray-700 { border-color: #3f3f46; }
+        .dark .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.5); }
+        
+        /* Dark mode badge fixes */
+        .dark .bg-green-100 { background-color: #064e3b; }
+        .dark .text-green-700 { color: #6ee7b7; }
+        .dark .bg-blue-100 { background-color: #1e3a8a; }
+        .dark .text-blue-700 { color: #93c5fd; }
+        .dark .bg-yellow-100 { background-color: #422006; }
+        .dark .text-yellow-700 { color: #fde047; }
+        .dark .bg-red-100 { background-color: #450a0a; }
+        .dark .text-red-700 { color: #fca5a5; }
+        .dark .bg-orange-100 { background-color: #431407; }
+        .dark .text-orange-600 { color: #fdba74; }
+        .dark .bg-amber-50 { background-color: #451a03; }
+        .dark .border-amber-200 { border-color: #78350f; }
+        .dark .text-amber-800 { color: #fcd34d; }
+        .dark .text-amber-700 { color: #fde68a; }
         
         /* Floating emoji animations */
         @keyframes float {
@@ -50,7 +73,7 @@
             z-index: 0;
         }
         .dark .floating-emoji {
-            opacity: 0.12;
+            opacity: 0.10; /* Slightly more subtle in dark mode */
         }
         .float-1 { animation: float 6s ease-in-out infinite; }
         .float-2 { animation: floatSlow 8s ease-in-out infinite; }
@@ -65,6 +88,13 @@
 
     <script type="text/babel">
         const { useState, useEffect, createContext, useContext } = React;
+
+        // ==========================================================
+        // 🔗 PASTE YOUR DEFAULT GOOGLE SHEET WEB APP URL HERE
+        // This will pre-fill the settings so you don't have to 
+        // update it in every session. It still saves to IndexedDB.
+        // ==========================================================
+        const DEFAULT_GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/YOUR_DEFAULT_SCRIPT_ID/exec'; 
 
         // Theme Context
         const ThemeContext = createContext();
@@ -171,7 +201,6 @@
                     const getRequest = store.get(id);
                     getRequest.onsuccess = () => {
                         const order = { ...getRequest.result, ...updates };
-                        // If status changed, mark for re-sync and track the change
                         if (updates.status && updates.status !== getRequest.result.status) {
                             order.synced = false;
                             order.statusChanged = true;
@@ -189,7 +218,12 @@
                     const transaction = database.transaction(['settings'], 'readonly');
                     const store = transaction.objectStore('settings');
                     const request = store.get('main');
-                    request.onsuccess = () => resolve(request.result || { id: 'main', googleSheetUrl: '', restaurantName: 'Restaurant', currency: '$' });
+                    request.onsuccess = () => resolve(request.result || { 
+                        id: 'main', 
+                        googleSheetUrl: DEFAULT_GOOGLE_SHEET_URL, // Pre-filled default
+                        restaurantName: 'Restaurant', 
+                        currency: '$' 
+                    });
                     request.onerror = () => reject(request.error);
                 });
             },
@@ -300,7 +334,7 @@
         // Sync to Google Sheets
         const syncOrders = async () => {
             const settings = await db.getSettings();
-            if (!settings.googleSheetUrl) return { synced: 0, failed: 0 };
+            if (!settings.googleSheetUrl || settings.googleSheetUrl.includes('YOUR_DEFAULT_SCRIPT_ID')) return { synced: 0, failed: 0 };
             
             const orders = await db.getOrders();
             const unsynced = orders.filter(o => !o.synced);
@@ -308,9 +342,7 @@
 
             for (const order of unsynced) {
                 try {
-                    // Only send if status has changed or it's a new order
                     const shouldSend = !order.lastSyncedStatus || order.lastSyncedStatus !== order.status;
-                    
                     if (shouldSend) {
                         await fetch(settings.googleSheetUrl, {
                             method: 'POST',
@@ -331,8 +363,6 @@
                             })
                         });
                     }
-                    
-                    // Mark as synced and update last synced status
                     await db.updateOrder(order.id, { 
                         synced: true, 
                         lastSyncedStatus: order.status,
@@ -421,12 +451,10 @@
                 const order = activeOrders.find(o => o.id === orderId);
                 if (!order) return;
 
-                // Status progression rules
                 const statusOrder = ['pending', 'preparing', 'ready', 'delivered'];
                 const currentIndex = statusOrder.indexOf(order.status);
                 const newIndex = statusOrder.indexOf(newStatus);
 
-                // Non-admins can only advance status (not revert)
                 if (!isAdmin && newIndex <= currentIndex) {
                     alert('⚠️ You can only advance order status, not revert it.');
                     return;
@@ -515,7 +543,6 @@
                         </div>
                     </div>
                     <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-6 relative z-10">
-                        {/* Active Orders Toggle */}
                         {activeOrders.length > 0 && (
                             <div className="mb-4">
                                 <button 
@@ -600,9 +627,9 @@
                             {filteredItems.map(item => <button key={item.id} onClick={() => handleItemClick(item)} className={`rounded-2xl p-4 text-left hover:shadow-lg transition-all border ${darkMode ? 'bg-gray-800 border-gray-700 hover:border-gray-600' : 'bg-white border-gray-100 hover:border-orange-200'}`}><div className="text-4xl mb-2">{item.emoji}</div><h3 className={`font-semibold text-sm ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{item.name}</h3><p className="text-orange-600 font-bold mt-1">${item.variants ? item.variants[0].price.toFixed(2) : item.price.toFixed(2)}</p></button>)}
                         </div>
                     </main>
-                    {selectedItem && <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-4" onClick={() => setSelectedItem(null)}><div className="bg-white rounded-3xl p-6 max-w-sm w-full" onClick={e => e.stopPropagation()}><div className="text-center mb-4"><span className="text-5xl">{selectedItem.emoji}</span><h3 className="text-xl font-bold mt-2">{selectedItem.name}</h3></div><div className="space-y-2 mb-4">{selectedItem.variants.map(v => <button key={v.name} onClick={() => { sounds.click(); setSelectedVariant(v.name); }} className={`w-full p-3 rounded-xl text-left flex justify-between ${selectedVariant === v.name ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50 border-2 border-transparent'}`}><span>{v.name}</span><span className="font-bold text-orange-600">${v.price.toFixed(2)}</span></button>)}</div><button onClick={() => addToCart(selectedItem, selectedVariant)} className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl">Add to Cart 🛒</button></div></div>}
-                    {showCart && <div className="fixed inset-0 bg-black/50 z-50 flex justify-end" onClick={() => setShowCart(false)}><div className="bg-white w-full max-w-md h-full overflow-y-auto" onClick={e => e.stopPropagation()}><div className="sticky top-0 bg-white border-b p-4 flex justify-between"><h2 className="text-xl font-bold">🛒 Your Cart</h2><button onClick={() => setShowCart(false)} className="p-2 hover:bg-gray-100 rounded-lg">✕</button></div>{cart.length === 0 ? <div className="flex flex-col items-center justify-center h-64 text-gray-400"><span className="text-5xl mb-3">🛒</span><p>Cart is empty</p></div> : <><div className="p-4 space-y-3">{cart.map((item, i) => <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-center gap-3"><span className="text-2xl">{item.menuItem.emoji}</span><div className="flex-1"><p className="font-medium text-sm">{item.menuItem.name}</p>{item.variant && <p className="text-xs text-gray-500">{item.variant}</p>}<p className="text-orange-600 font-bold text-sm">${(getItemPrice(item) * item.quantity).toFixed(2)}</p></div><div className="flex items-center gap-1"><button onClick={() => updateQuantity(i, -1)} className="w-7 h-7 rounded-full bg-gray-200">−</button><span className="w-6 text-center text-sm">{item.quantity}</span><button onClick={() => updateQuantity(i, 1)} className="w-7 h-7 rounded-full bg-orange-100 text-orange-600">+</button></div><button onClick={() => removeFromCart(i)} className="p-1 text-red-400">🗑️</button></div>)}</div><div className="sticky bottom-0 bg-white border-t p-4"><div className="flex justify-between mb-4"><span className="text-lg font-bold">Total:</span><span className="text-2xl font-bold text-orange-600">${cartTotal.toFixed(2)}</span></div><button onClick={() => { sounds.click(); setShowCart(false); setShowCheckout(true); }} className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl">Proceed to Checkout 💳</button></div></>}</div></div>}
-                    {showCheckout && <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowCheckout(false)}><div className="bg-white rounded-3xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}><h2 className="text-xl font-bold mb-4">📝 Order Details</h2><div className="space-y-4"><div><label className="text-sm font-medium text-gray-600 mb-2 block">Order Type</label><div className="grid grid-cols-3 gap-2">{['dine-in', 'takeaway', 'delivery'].map(type => <button key={type} onClick={() => { sounds.click(); setOrderType(type); }} className={`p-2 rounded-xl text-sm font-medium ${orderType === type ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50 border-2 border-transparent'}`}>{type === 'dine-in' ? '🪑' : type === 'takeaway' ? '🥡' : '🚗'} {type}</button>)}</div></div><div><label className="text-sm font-medium text-gray-600 mb-1 block">Customer Name</label><input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Walk-in customer" className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" /></div><div><label className="text-sm font-medium text-gray-600 mb-1 block">Phone Number</label><input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Optional" className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" /></div>{orderType === 'dine-in' && <div><label className="text-sm font-medium text-gray-600 mb-1 block">Table Number</label><input type="text" value={tableNumber} onChange={(e) => setTableNumber(e.target.value)} placeholder="e.g., T5" className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" /></div>}<div><label className="text-sm font-medium text-gray-600 mb-1 block">Special Notes</label><textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Any special requests..." className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none resize-none h-20" /></div><div className="bg-gray-50 rounded-xl p-3"><h3 className="font-medium text-sm mb-2">📋 Order Summary</h3>{cart.map((item, i) => <div key={i} className="flex justify-between text-sm py-1"><span>{item.menuItem.emoji} {item.menuItem.name}{item.variant ? ` (${item.variant})` : ''} ×{item.quantity}</span><span className="font-medium">${(getItemPrice(item) * item.quantity).toFixed(2)}</span></div>)}<div className="border-t mt-2 pt-2 flex justify-between font-bold"><span>Total</span><span className="text-orange-600">${cartTotal.toFixed(2)}</span></div></div><button onClick={handleSubmitOrder} className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl">✅ Place Order</button></div></div></div>}
+                    {selectedItem && <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-4" onClick={() => setSelectedItem(null)}><div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-3xl p-6 max-w-sm w-full`} onClick={e => e.stopPropagation()}><div className="text-center mb-4"><span className="text-5xl">{selectedItem.emoji}</span><h3 className={`text-xl font-bold mt-2 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{selectedItem.name}</h3></div><div className="space-y-2 mb-4">{selectedItem.variants.map(v => <button key={v.name} onClick={() => { sounds.click(); setSelectedVariant(v.name); }} className={`w-full p-3 rounded-xl text-left flex justify-between ${selectedVariant === v.name ? 'bg-orange-100 border-2 border-orange-400 text-gray-900' : `${darkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-50 text-gray-800'} border-2 border-transparent`}`}><span>{v.name}</span><span className="font-bold text-orange-600">${v.price.toFixed(2)}</span></button>)}</div><button onClick={() => addToCart(selectedItem, selectedVariant)} className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl">Add to Cart 🛒</button></div></div>}
+                    {showCart && <div className="fixed inset-0 bg-black/50 z-50 flex justify-end" onClick={() => setShowCart(false)}><div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} w-full max-w-md h-full overflow-y-auto`} onClick={e => e.stopPropagation()}><div className={`sticky top-0 border-b p-4 flex justify-between ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><h2 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>🛒 Your Cart</h2><button onClick={() => setShowCart(false)} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}>✕</button></div>{cart.length === 0 ? <div className={`flex flex-col items-center justify-center h-64 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}><span className="text-5xl mb-3">🛒</span><p>Cart is empty</p></div> : <><div className="p-4 space-y-3">{cart.map((item, i) => <div key={i} className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl p-3 flex items-center gap-3`}><span className="text-2xl">{item.menuItem.emoji}</span><div className="flex-1"><p className={`font-medium text-sm ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{item.menuItem.name}</p>{item.variant && <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{item.variant}</p>}<p className="text-orange-600 font-bold text-sm">${(getItemPrice(item) * item.quantity).toFixed(2)}</p></div><div className="flex items-center gap-1"><button onClick={() => updateQuantity(i, -1)} className={`w-7 h-7 rounded-full ${darkMode ? 'bg-gray-600 text-gray-200' : 'bg-gray-200 text-gray-800'}`}>−</button><span className={`w-6 text-center text-sm ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{item.quantity}</span><button onClick={() => updateQuantity(i, 1)} className="w-7 h-7 rounded-full bg-orange-100 text-orange-600">+</button></div><button onClick={() => removeFromCart(i)} className="p-1 text-red-400">🗑️</button></div>)}</div><div className={`sticky bottom-0 border-t p-4 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><div className="flex justify-between mb-4"><span className={`text-lg font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Total:</span><span className="text-2xl font-bold text-orange-600">${cartTotal.toFixed(2)}</span></div><button onClick={() => { sounds.click(); setShowCart(false); setShowCheckout(true); }} className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl">Proceed to Checkout 💳</button></div></>}</div></div>}
+                    {showCheckout && <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowCheckout(false)}><div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-3xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto`} onClick={e => e.stopPropagation()}><h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>📝 Order Details</h2><div className="space-y-4"><div><label className={`text-sm font-medium mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Order Type</label><div className="grid grid-cols-3 gap-2">{['dine-in', 'takeaway', 'delivery'].map(type => <button key={type} onClick={() => { sounds.click(); setOrderType(type); }} className={`p-2 rounded-xl text-sm font-medium ${orderType === type ? 'bg-orange-100 border-2 border-orange-400 text-gray-900' : `${darkMode ? 'bg-gray-700 text-gray-200 border-gray-600' : 'bg-gray-50 text-gray-800 border-transparent'} border-2`}`}>{type === 'dine-in' ? '🪑' : type === 'takeaway' ? '🥡' : '🚗'} {type}</button>)}</div></div><div><label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Customer Name</label><input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Walk-in customer" className={`w-full px-4 py-2 border-2 rounded-xl focus:border-orange-400 outline-none ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-200 text-gray-800'}`} /></div><div><label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Phone Number</label><input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Optional" className={`w-full px-4 py-2 border-2 rounded-xl focus:border-orange-400 outline-none ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-200 text-gray-800'}`} /></div>{orderType === 'dine-in' && <div><label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Table Number</label><input type="text" value={tableNumber} onChange={(e) => setTableNumber(e.target.value)} placeholder="e.g., T5" className={`w-full px-4 py-2 border-2 rounded-xl focus:border-orange-400 outline-none ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-200 text-gray-800'}`} /></div>}<div><label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Special Notes</label><textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} placeholder="Any special requests..." className={`w-full px-4 py-2 border-2 rounded-xl focus:border-orange-400 outline-none resize-none h-20 ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-200 text-gray-800'}`} /></div><div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl p-3`}><h3 className={`font-medium text-sm mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>📋 Order Summary</h3>{cart.map((item, i) => <div key={i} className={`flex justify-between text-sm py-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}><span>{item.menuItem.emoji} {item.menuItem.name}{item.variant ? ` (${item.variant})` : ''} ×{item.quantity}</span><span className="font-medium">${(getItemPrice(item) * item.quantity).toFixed(2)}</span></div>)}<div className={`border-t mt-2 pt-2 flex justify-between font-bold ${darkMode ? 'border-gray-600 text-gray-100' : 'border-gray-200 text-gray-800'}`}><span>Total</span><span className="text-orange-600">${cartTotal.toFixed(2)}</span></div></div><button onClick={handleSubmitOrder} className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl">✅ Place Order</button></div></div></div>}
                 </div>
             );
         };
@@ -621,9 +648,9 @@
             const unsyncedCount = orders.filter(o => !o.synced).length;
 
             return (
-                <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}><FloatingBackground /><header className={`shadow-sm border-b sticky top-0 z-20 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between relative z-10"><div className="flex items-center gap-3"><button onClick={onBack} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-100'}`}>← Back</button><h1 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : ''}`}>📋 Order History</h1></div>{unsyncedCount > 0 && <button onClick={handleSync} className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium">🔄 Sync ({unsyncedCount})</button>}</div></header>
+                <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}><FloatingBackground /><header className={`shadow-sm border-b sticky top-0 z-20 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between relative z-10"><div className="flex items-center gap-3"><button onClick={onBack} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-100'}`}>← Back</button><h1 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>📋 Order History</h1></div>{unsyncedCount > 0 && <button onClick={handleSync} className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium">🔄 Sync ({unsyncedCount})</button>}</div></header>
                 <div className="max-w-6xl mx-auto px-4 py-4"><div className="flex gap-2 mb-4 flex-wrap">{['all', 'pending', 'preparing', 'ready', 'delivered', 'cancelled'].map(status => <button key={status} onClick={() => { sounds.click(); setFilter(status); }} className={`px-3 py-2 rounded-xl text-sm font-medium ${filter === status ? 'bg-orange-500 text-white' : darkMode ? 'bg-gray-800 border border-gray-700 text-gray-300' : 'bg-white border border-gray-200'}`}>{status === 'all' ? '📋' : statusEmojis[status]} {status.charAt(0).toUpperCase() + status.slice(1)}</button>)}</div>
-                <div className="space-y-3 relative z-10">{filteredOrders.length === 0 ? <div className="text-center py-12 text-gray-400"><span className="text-5xl block mb-3">📭</span><p>No orders found</p></div> : filteredOrders.map(order => <div key={order.id} className={`rounded-2xl p-4 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><div className="flex items-start justify-between mb-3"><div><div className="flex items-center gap-2"><span className="font-bold">{order.orderId}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[order.status]}`}>{statusEmojis[order.status]} {order.status}</span>{!order.synced && <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-600">⏳ Not synced</span>}</div><p className="text-sm text-gray-500 mt-1">👤 {order.customerName} • {order.orderType}{order.tableNumber && ` • Table ${order.tableNumber}`}</p></div><div className="text-right"><p className="font-bold text-orange-600 text-lg">${order.total.toFixed(2)}</p><p className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p></div></div><div className="bg-gray-50 rounded-xl p-3 mb-3">{order.items.map((item, i) => <span key={i} className="text-sm mr-3">{item.menuItem.emoji} {item.menuItem.name}{item.variant && ` (${item.variant})`} ×{item.quantity}</span>)}{order.notes && <p className="text-sm text-amber-600 mt-1">📝 {order.notes}</p>}</div><div className="flex gap-2">{order.status === 'pending' && <button onClick={() => handleStatusChange(order.id, 'preparing')} className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium">👨‍🍳 Start Preparing</button>}{order.status === 'preparing' && <button onClick={() => handleStatusChange(order.id, 'ready')} className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm font-medium">✅ Mark Ready</button>}{order.status === 'ready' && <button onClick={() => handleStatusChange(order.id, 'delivered')} className="px-3 py-1.5 bg-gray-600 text-white rounded-lg text-sm font-medium">📦 Delivered</button>}{order.status !== 'delivered' && order.status !== 'cancelled' && <button onClick={() => { if (confirm('Cancel this order?')) handleStatusChange(order.id, 'cancelled'); }} className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-medium">❌ Cancel</button>}</div></div>)}</div></div></div>
+                <div className="space-y-3 relative z-10">{filteredOrders.length === 0 ? <div className={`text-center py-12 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}><span className="text-5xl block mb-3">📭</span><p>No orders found</p></div> : filteredOrders.map(order => <div key={order.id} className={`rounded-2xl p-4 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><div className="flex items-start justify-between mb-3"><div><div className="flex items-center gap-2"><span className={`font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{order.orderId}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[order.status]}`}>{statusEmojis[order.status]} {order.status}</span>{!order.synced && <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-600">⏳ Not synced</span>}</div><p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>👤 {order.customerName} • {order.orderType}{order.tableNumber && ` • Table ${order.tableNumber}`}</p></div><div className="text-right"><p className="font-bold text-orange-600 text-lg">${order.total.toFixed(2)}</p><p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p></div></div><div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl p-3 mb-3`}>{order.items.map((item, i) => <span key={i} className={`text-sm mr-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{item.menuItem.emoji} {item.menuItem.name}{item.variant && ` (${item.variant})`} ×{item.quantity}</span>)}{order.notes && <p className="text-sm text-amber-600 mt-1">📝 {order.notes}</p>}</div><div className="flex gap-2">{order.status === 'pending' && <button onClick={() => handleStatusChange(order.id, 'preparing')} className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium">👨‍🍳 Start Preparing</button>}{order.status === 'preparing' && <button onClick={() => handleStatusChange(order.id, 'ready')} className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm font-medium">✅ Mark Ready</button>}{order.status === 'ready' && <button onClick={() => handleStatusChange(order.id, 'delivered')} className="px-3 py-1.5 bg-gray-600 text-white rounded-lg text-sm font-medium">📦 Delivered</button>}{order.status !== 'delivered' && order.status !== 'cancelled' && <button onClick={() => { if (confirm('Cancel this order?')) handleStatusChange(order.id, 'cancelled'); }} className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-medium">❌ Cancel</button>}</div></div>)}</div></div></div>
             );
         };
 
@@ -643,15 +670,16 @@
             const handleSync = async () => { sounds.click(); const result = await syncOrders(); await loadOrders(); alert(`Synced: ${result.synced} orders. Failed: ${result.failed}`); };
 
             return (
-                <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}><FloatingBackground /><header className={`shadow-sm border-b sticky top-0 z-20 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between relative z-10"><div className="flex items-center gap-3"><button onClick={onBack} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-100'}`}>← Back</button><h1 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : ''}`}>📊 Dashboard</h1></div>{unsyncedCount > 0 && <button onClick={handleSync} className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium">🔄 Sync ({unsyncedCount})</button>}</div></header>
+                <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}><FloatingBackground /><header className={`shadow-sm border-b sticky top-0 z-20 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between relative z-10"><div className="flex items-center gap-3"><button onClick={onBack} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-100'}`}>← Back</button><h1 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>📊 Dashboard</h1></div>{unsyncedCount > 0 && <button onClick={handleSync} className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium">🔄 Sync ({unsyncedCount})</button>}</div></header>
                 <div className="max-w-6xl mx-auto px-4 py-6 relative z-10"><div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"><div className="bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl p-4 text-white"><p className="text-sm opacity-80">💰 Today's Revenue</p><p className="text-3xl font-bold">${totalRevenue.toFixed(2)}</p><p className="text-sm opacity-80">{todayOrders.length} orders</p></div><div className="bg-gradient-to-br from-yellow-400 to-amber-500 rounded-2xl p-4 text-white"><p className="text-sm opacity-80">⏳ Pending</p><p className="text-3xl font-bold">{pendingOrders}</p></div><div className="bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl p-4 text-white"><p className="text-sm opacity-80">👨‍🍳 Preparing</p><p className="text-3xl font-bold">{preparingOrders}</p></div><div className="bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl p-4 text-white"><p className="text-sm opacity-80">✅ Ready</p><p className="text-3xl font-bold">{readyOrders}</p><p className="text-sm opacity-80">{deliveredOrders} delivered</p></div></div>
-                <div className={`rounded-2xl p-6 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><h2 className={`font-bold text-lg mb-4 ${darkMode ? 'text-gray-100' : ''}`}>🕐 Recent Orders</h2><div className="space-y-2">{todayOrders.slice(0, 10).reverse().map(order => <div key={order.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0"><div className="flex items-center gap-3"><span className="font-medium text-sm">{order.orderId}</span><span className="text-sm text-gray-500">{order.customerName}</span></div><div className="flex items-center gap-3"><span className="font-bold text-orange-600">${order.total.toFixed(2)}</span><span className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div></div>)}</div></div></div></div>
+                <div className={`rounded-2xl p-6 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><h2 className={`font-bold text-lg mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>🕐 Recent Orders</h2><div className="space-y-2">{todayOrders.slice(0, 10).reverse().map(order => <div key={order.id} className={`flex items-center justify-between py-2 border-b last:border-0 ${darkMode ? 'border-gray-700' : 'border-gray-50'}`}><div className="flex items-center gap-3"><span className={`font-medium text-sm ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{order.orderId}</span><span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{order.customerName}</span></div><div className="flex items-center gap-3"><span className="font-bold text-orange-600">${order.total.toFixed(2)}</span><span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div></div>)}</div></div></div></div>
             );
         };
 
         const Settings = ({ onBack }) => {
             const { darkMode } = useTheme();
-            const [settings, setSettings] = useState({ googleSheetUrl: '', restaurantName: 'Restaurant', currency: '$' });
+            // Pre-fill with default URL so it's never blank on first load
+            const [settings, setSettings] = useState({ googleSheetUrl: DEFAULT_GOOGLE_SHEET_URL, restaurantName: 'Restaurant', currency: '$' });
             const [saved, setSaved] = useState(false);
             useEffect(() => { loadSettings(); }, []);
             const loadSettings = async () => { const s = await db.getSettings(); setSettings(s); };
@@ -659,21 +687,15 @@
             const handleSync = async () => { sounds.click(); const result = await syncOrders(); sounds.sync(); alert(`Sync complete!\n✅ Synced: ${result.synced}\n❌ Failed: ${result.failed}`); };
 
             return (
-                <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}><FloatingBackground /><header className={`shadow-sm border-b sticky top-0 z-20 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between relative z-10"><div className="flex items-center gap-3"><button onClick={onBack} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-100'}`}>← Back</button><h1 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : ''}`}>⚙️ Settings</h1></div>{saved && <span className="text-green-600 font-medium">✅ Saved!</span>}</div></header>
-                <div className="max-w-3xl mx-auto px-4 py-6 space-y-6 relative z-10"><div className={`rounded-2xl p-6 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><h2 className={`font-bold text-lg mb-1 ${darkMode ? 'text-gray-100' : ''}`}>📊 Google Sheets Integration</h2><p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Connect your Google Sheet to automatically log all orders.</p><div className="space-y-4"><div><label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Google Apps Script Web App URL</label><input type="url" value={settings.googleSheetUrl} onChange={(e) => setSettings(s => ({ ...s, googleSheetUrl: e.target.value }))} placeholder="https://script.google.com/macros/s/..." className={`w-full px-4 py-3 border-2 rounded-xl focus:border-orange-400 outline-none text-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-200'}`} /></div><div className="bg-amber-50 border border-amber-200 rounded-xl p-4"><h3 className="font-medium text-amber-800 mb-2">📝 Setup Instructions:</h3><ol className="text-sm text-amber-700 space-y-1 list-decimal list-inside"><li>Open Google Sheets → Extensions → Apps Script</li><li>Paste the Apps Script code (see below)</li><li>Deploy → New Deployment → Web App</li><li>Set "Execute as: Me" and "Who has access: Anyone"</li><li>Copy the Web App URL and paste it above</li></ol></div><details className="bg-gray-50 rounded-xl p-4"><summary className="font-medium text-gray-700 cursor-pointer">📄 View Apps Script Code</summary><pre className="mt-3 bg-gray-900 text-green-400 p-4 rounded-xl text-xs overflow-x-auto whitespace-pre-wrap">{`function doPost(e) {
+                <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}><FloatingBackground /><header className={`shadow-sm border-b sticky top-0 z-20 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between relative z-10"><div className="flex items-center gap-3"><button onClick={onBack} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-100'}`}>← Back</button><h1 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>⚙️ Settings</h1></div>{saved && <span className="text-green-600 font-medium">✅ Saved!</span>}</div></header>
+                <div className="max-w-3xl mx-auto px-4 py-6 space-y-6 relative z-10"><div className={`rounded-2xl p-6 shadow-sm border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}><h2 className={`font-bold text-lg mb-1 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>📊 Google Sheets Integration</h2><p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Connect your Google Sheet to automatically log all orders.</p><div className="space-y-4"><div><label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Google Apps Script Web App URL</label><input type="url" value={settings.googleSheetUrl} onChange={(e) => setSettings(s => ({ ...s, googleSheetUrl: e.target.value }))} placeholder="https://script.google.com/macros/s/..." className={`w-full px-4 py-3 border-2 rounded-xl focus:border-orange-400 outline-none text-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-200 text-gray-800'}`} /></div><div className="bg-amber-50 border border-amber-200 rounded-xl p-4"><h3 className="font-medium text-amber-800 mb-2">📝 Setup Instructions:</h3><ol className="text-sm text-amber-700 space-y-1 list-decimal list-inside"><li>Open Google Sheets → Extensions → Apps Script</li><li>Paste the Apps Script code (see below)</li><li>Deploy → New Deployment → Web App</li><li>Set "Execute as: Me" and "Who has access: Anyone"</li><li>Copy the Web App URL and paste it above</li></ol></div><details className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl p-4`}><summary className={`font-medium cursor-pointer ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>📄 View Apps Script Code</summary><pre className="mt-3 bg-gray-900 text-green-400 p-4 rounded-xl text-xs overflow-x-auto whitespace-pre-wrap">{`function doPost(e) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   var data = JSON.parse(e.postData.contents);
   
-  // Add header row if sheet is empty
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow([
-      'Order ID', 'Timestamp', 'Customer Name', 
-      'Phone', 'Order Type', 'Table', 'Items', 
-      'Total', 'Notes', 'Status', 'Staff', 'Last Updated'
-    ]);
+    sheet.appendRow(['Order ID', 'Timestamp', 'Customer Name', 'Phone', 'Order Type', 'Table', 'Items', 'Total', 'Notes', 'Status', 'Staff', 'Last Updated']);
   }
   
-  // Check if order already exists
   var orderId = data.orderId;
   var allData = sheet.getDataRange().getValues();
   var existingRow = -1;
@@ -687,43 +709,22 @@
     }
   }
   
-  // Skip update if status hasn't changed
   if (existingRow > 0 && currentStatus === data.status) {
-    return ContentService
-      .createTextOutput(JSON.stringify({status: 'success', message: 'no_change'}))
-      .setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({status: 'success', message: 'no_change'})).setMimeType(ContentService.MimeType.JSON);
   }
   
   var now = new Date();
-  
   if (existingRow > 0) {
-    // Update only status and last updated
     sheet.getRange(existingRow, 10).setValue(data.status);
     sheet.getRange(existingRow, 12).setValue(now);
   } else {
-    // Add new row
-    sheet.appendRow([
-      data.orderId,
-      new Date(data.timestamp),
-      data.customerName,
-      data.customerPhone,
-      data.orderType,
-      data.tableNumber,
-      data.items,
-      data.total,
-      data.notes,
-      data.status,
-      data.createdBy,
-      now
-    ]);
+    sheet.appendRow([data.orderId, new Date(data.timestamp), data.customerName, data.customerPhone, data.orderType, data.tableNumber, data.items, data.total, data.notes, data.status, data.createdBy, now]);
   }
   
-  return ContentService
-    .createTextOutput(JSON.stringify({status: 'success'}))
-    .setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify({status: 'success'})).setMimeType(ContentService.MimeType.JSON);
 }`}</pre></details></div></div>
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"><h2 className="font-bold text-lg mb-4">🏪 Restaurant Settings</h2><div className="space-y-4"><div><label className="text-sm font-medium text-gray-600 mb-1 block">Restaurant Name</label><input type="text" value={settings.restaurantName} onChange={(e) => setSettings(s => ({ ...s, restaurantName: e.target.value }))} className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" /></div><div><label className="text-sm font-medium text-gray-600 mb-1 block">Currency Symbol</label><input type="text" value={settings.currency} onChange={(e) => setSettings(s => ({ ...s, currency: e.target.value }))} className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" maxLength={3} /></div></div></div>
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"><h2 className="font-bold text-lg mb-4">🔄 Sync Controls</h2><p className="text-sm text-gray-500 mb-4">Orders are automatically synced every 30 seconds when online.</p><button onClick={handleSync} className="px-6 py-3 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600">🔄 Sync Now</button></div>
+                <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl p-6 shadow-sm border`}><h2 className={`font-bold text-lg mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>🏪 Restaurant Settings</h2><div className="space-y-4"><div><label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Restaurant Name</label><input type="text" value={settings.restaurantName} onChange={(e) => setSettings(s => ({ ...s, restaurantName: e.target.value }))} className={`w-full px-4 py-3 border-2 rounded-xl focus:border-orange-400 outline-none ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-200 text-gray-800'}`} /></div><div><label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Currency Symbol</label><input type="text" value={settings.currency} onChange={(e) => setSettings(s => ({ ...s, currency: e.target.value }))} className={`w-full px-4 py-3 border-2 rounded-xl focus:border-orange-400 outline-none ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-200 text-gray-800'}`} maxLength={3} /></div></div></div>
+                <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl p-6 shadow-sm border`}><h2 className={`font-bold text-lg mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>🔄 Sync Controls</h2><p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Orders are automatically synced every 30 seconds when online.</p><button onClick={handleSync} className="px-6 py-3 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600">🔄 Sync Now</button></div>
                 <button onClick={handleSave} className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-lg rounded-2xl">💾 Save Settings</button></div></div>
             );
         };
@@ -819,7 +820,7 @@
                         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between relative z-10">
                             <div className="flex items-center gap-3">
                                 <button onClick={onBack} className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-100'}`}>← Back</button>
-                                <h1 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : ''}`}>🍽️ Menu Management</h1>
+                                <h1 className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>🍽️ Menu Management</h1>
                             </div>
                             <button onClick={handleAdd} className="px-4 py-2 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600">+ Add Item</button>
                         </div>
@@ -841,9 +842,9 @@
                                     
                                     {item.variants && item.variants.length > 0 ? (
                                         <div className="mb-3">
-                                            <p className="text-xs text-gray-500 mb-1">Variants:</p>
+                                            <p className={`text-xs mb-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Variants:</p>
                                             {item.variants.map((v, i) => (
-                                                <div key={i} className="flex justify-between text-sm py-1">
+                                                <div key={i} className={`flex justify-between text-sm py-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                                                     <span>{v.name}</span>
                                                     <span className="font-medium text-orange-600">${v.price.toFixed(2)}</span>
                                                 </div>
@@ -862,33 +863,32 @@
                         </div>
 
                         {items.length === 0 && (
-                            <div className="text-center py-12 text-gray-400">
+                            <div className={`text-center py-12 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                                 <span className="text-5xl block mb-3">🍽️</span>
                                 <p>No menu items yet. Click "+ Add Item" to get started!</p>
                             </div>
                         )}
                     </div>
 
-                    {/* Add/Edit Form Modal */}
                     {showAddForm && (
                         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowAddForm(false)}>
-                            <div className="bg-white rounded-3xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                                <h2 className="text-xl font-bold mb-4">{editingItem ? '✏️ Edit Item' : '+ Add New Item'}</h2>
+                            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-3xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto`} onClick={e => e.stopPropagation()}>
+                                <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{editingItem ? '✏️ Edit Item' : '+ Add New Item'}</h2>
                                 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="text-sm font-medium text-gray-600 mb-1 block">Emoji</label>
-                                        <input type="text" value={formData.emoji} onChange={(e) => setFormData({...formData, emoji: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none text-2xl" maxLength={2} />
+                                        <label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Emoji</label>
+                                        <input type="text" value={formData.emoji} onChange={(e) => setFormData({...formData, emoji: e.target.value})} className={`w-full px-4 py-2 border-2 rounded-xl focus:border-orange-400 outline-none text-2xl ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-200 text-gray-800'}`} maxLength={2} />
                                     </div>
 
                                     <div>
-                                        <label className="text-sm font-medium text-gray-600 mb-1 block">Item Name</label>
-                                        <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="e.g., Margherita Pizza" className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" />
+                                        <label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Item Name</label>
+                                        <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="e.g., Margherita Pizza" className={`w-full px-4 py-2 border-2 rounded-xl focus:border-orange-400 outline-none ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-200 text-gray-800'}`} />
                                     </div>
 
                                     <div>
-                                        <label className="text-sm font-medium text-gray-600 mb-1 block">Category</label>
-                                        <select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none">
+                                        <label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Category</label>
+                                        <select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className={`w-full px-4 py-2 border-2 rounded-xl focus:border-orange-400 outline-none ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-200 text-gray-800'}`}>
                                             <option value="pizza">🍕 Pizza</option>
                                             <option value="burger">🍔 Burger</option>
                                             <option value="shawarma">🌯 Shawarma</option>
@@ -900,35 +900,35 @@
                                     <div>
                                         <label className="flex items-center gap-2 mb-2">
                                             <input type="checkbox" checked={formData.hasVariants} onChange={(e) => setFormData({...formData, hasVariants: e.target.checked, variants: e.target.checked ? [{ name: 'Small', price: formData.price }] : []})} className="w-4 h-4" />
-                                            <span className="text-sm font-medium text-gray-600">Has variants (sizes/options)</span>
+                                            <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Has variants (sizes/options)</span>
                                         </label>
                                     </div>
 
                                     {!formData.hasVariants && (
                                         <div>
-                                            <label className="text-sm font-medium text-gray-600 mb-1 block">Price ($)</label>
-                                            <input type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none" />
+                                            <label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Price ($)</label>
+                                            <input type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className={`w-full px-4 py-2 border-2 rounded-xl focus:border-orange-400 outline-none ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-200 text-gray-800'}`} />
                                         </div>
                                     )}
 
                                     {formData.hasVariants && (
                                         <div>
-                                            <label className="text-sm font-medium text-gray-600 mb-2 block">Variants</label>
+                                            <label className={`text-sm font-medium mb-2 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Variants</label>
                                             <div className="space-y-2">
                                                 {formData.variants.map((variant, index) => (
                                                     <div key={index} className="flex gap-2 items-center">
-                                                        <input type="text" value={variant.name} onChange={(e) => updateVariant(index, 'name', e.target.value)} placeholder="Name" className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none text-sm" />
-                                                        <input type="number" step="0.01" value={variant.price} onChange={(e) => updateVariant(index, 'price', e.target.value)} placeholder="Price" className="w-24 px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-orange-400 outline-none text-sm" />
+                                                        <input type="text" value={variant.name} onChange={(e) => updateVariant(index, 'name', e.target.value)} placeholder="Name" className={`flex-1 px-3 py-2 border-2 rounded-xl focus:border-orange-400 outline-none text-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-200 text-gray-800'}`} />
+                                                        <input type="number" step="0.01" value={variant.price} onChange={(e) => updateVariant(index, 'price', e.target.value)} placeholder="Price" className={`w-24 px-3 py-2 border-2 rounded-xl focus:border-orange-400 outline-none text-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-200 text-gray-800'}`} />
                                                         <button onClick={() => removeVariant(index)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">✕</button>
                                                     </div>
                                                 ))}
-                                                <button onClick={addVariant} className="w-full py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200">+ Add Variant</button>
+                                                <button onClick={addVariant} className={`w-full py-2 rounded-xl text-sm font-medium ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>+ Add Variant</button>
                                             </div>
                                         </div>
                                     )}
 
                                     <div className="flex gap-2 pt-4">
-                                        <button onClick={() => setShowAddForm(false)} className="flex-1 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300">Cancel</button>
+                                        <button onClick={() => setShowAddForm(false)} className={`flex-1 py-3 font-bold rounded-xl ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>Cancel</button>
                                         <button onClick={handleSave} disabled={!formData.name || formData.price <= 0} className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl disabled:opacity-50">💾 Save</button>
                                     </div>
                                 </div>
@@ -970,12 +970,10 @@
                     setView('order-taking');
                 }
                 
-                // Initialize menu items and load them
                 db.initializeMenuItems(defaultMenuItems).then(() => {
                     loadMenuItems();
                 });
 
-                // Auto-sync every 30 seconds
                 const interval = setInterval(() => { if (navigator.onLine) syncOrders(); }, 30000);
                 return () => clearInterval(interval);
             }, []);
