@@ -221,8 +221,8 @@
                     request.onsuccess = () => resolve(request.result || { 
                         id: 'main', 
                         googleSheetUrl: DEFAULT_GOOGLE_SHEET_URL, // Pre-filled default
-                        restaurantName: 'Restaurant', 
-                        currency: '$' 
+                        restaurantName: 'Hafiz Restaurant', 
+                        currency: 'Rs' 
                     });
                     request.onerror = () => reject(request.error);
                 });
