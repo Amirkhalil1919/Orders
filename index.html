@@ -724,7 +724,7 @@
   return ContentService.createTextOutput(JSON.stringify({status: 'success'})).setMimeType(ContentService.MimeType.JSON);
 }`}</pre></details></div></div>
                 <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl p-6 shadow-sm border`}><h2 className={`font-bold text-lg mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>🏪 Restaurant Settings</h2><div className="space-y-4"><div><label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Restaurant Name</label><input type="text" value={settings.restaurantName} onChange={(e) => setSettings(s => ({ ...s, restaurantName: e.target.value }))} className={`w-full px-4 py-3 border-2 rounded-xl focus:border-orange-400 outline-none ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-200 text-gray-800'}`} /></div><div><label className={`text-sm font-medium mb-1 block ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Currency Symbol</label><input type="text" value={settings.currency} onChange={(e) => setSettings(s => ({ ...s, currency: e.target.value }))} className={`w-full px-4 py-3 border-2 rounded-xl focus:border-orange-400 outline-none ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-200 text-gray-800'}`} maxLength={3} /></div></div></div>
-                <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl p-6 shadow-sm border`}><h2 className={`font-bold text-lg mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>🔄 Sync Controls</h2><p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Orders are automatically synced every 30 seconds when online.</p><button onClick={handleSync} className="px-6 py-3 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600">🔄 Sync Now</button></div>
+                <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl p-6 shadow-sm border`}><h2 className={`font-bold text-lg mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>🔄 Sync Controls</h2><p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Orders are automatically synced every 15 seconds when online.</p><button onClick={handleSync} className="px-6 py-3 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600">🔄 Sync Now</button></div>
                 <button onClick={handleSave} className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-lg rounded-2xl">💾 Save Settings</button></div></div>
             );
         };
@@ -974,7 +974,7 @@
                     loadMenuItems();
                 });
 
-                const interval = setInterval(() => { if (navigator.onLine) syncOrders(); }, 30000);
+                const interval = setInterval(() => { if (navigator.onLine) syncOrders(); }, 15000);
                 return () => clearInterval(interval);
             }, []);
 
